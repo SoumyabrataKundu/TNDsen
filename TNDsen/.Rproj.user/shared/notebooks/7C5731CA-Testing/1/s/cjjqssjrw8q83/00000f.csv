@@ -1,0 +1,6 @@
+"0","k = TND_causal_bounds(o, 0.1, 1)"
+"0","abs(k$upper.bound - odds.ratio(o)) < 1e-10 & abs(k$lower.bound - odds.ratio(o)) < 1e-10"
+"1","[1]"
+"1"," TRUE"
+"1","
+"

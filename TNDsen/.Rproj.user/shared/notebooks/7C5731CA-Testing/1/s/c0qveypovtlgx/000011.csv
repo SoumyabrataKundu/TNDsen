@@ -1,0 +1,7 @@
+"0","k1 = TND_causal_bounds(o, 0.1)"
+"0","k2 =  TND_causal_bounds(o, 0.1, xi=2)"
+"0","abs(k1$upper.bound - k2$upper.bound) < 1e-4 & abs(k1$lower.bound - k2$lower.bound) < 1e-4"
+"1","[1]"
+"1"," TRUE"
+"1","
+"
