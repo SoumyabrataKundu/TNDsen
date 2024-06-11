@@ -29,5 +29,5 @@ To install the package `TNDsen` clone the repository and then run the following 
 
 `devtools::install_local("TNDsen", INSTALL_opts="--no-multiarch")`
 
-To reproduce the figures in the paper run `Plots.Rmd`
+To reproduce the figures in the paper run `Plots.Rmd`.
 
