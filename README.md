@@ -26,5 +26,8 @@ Senstivity Analysis for Test Negative Design
 # TNDsen Installation
 
 To install the package `TNDsen` clone the repository and then run the following in R console
-devtools::install_local("TNDsen", INSTALL_opts="--no-multiarch")
+
+`devtools::install_local("TNDsen", INSTALL_opts="--no-multiarch")`
+
+To reproduce the figures in the paper run `Plots.Rmd`
 
