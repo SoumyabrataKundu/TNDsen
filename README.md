@@ -9,7 +9,7 @@ Senstivity Analysis for Test Negative Design
 - Gurobi    (https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html)
 
 
-# R package Requirements
+## R package Requirements
 
 - Matrix
 - gurobi
@@ -23,7 +23,7 @@ Senstivity Analysis for Test Negative Design
 - plyr
 - latex2exp
 
-# TNDsen Installation
+## TNDsen Installation
 
 To install the package `TNDsen` clone the repository and then run the following in R console
 
