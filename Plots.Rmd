@@ -9,7 +9,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-
 # Real Data Plots
 ## New England Journal Plot
 
