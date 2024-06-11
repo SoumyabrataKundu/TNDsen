@@ -40,8 +40,6 @@ get_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type='transf
     
     update_progress(pb) 
   }
-
-  
   return(results)
 }
 
@@ -81,13 +79,12 @@ get_graph = function(results, delta, gamma, xi, title = "Some Title", labs = 1:n
     geom_segment(aes(x = Our.upper, xend = Our.upper, col = color),
                  y = results$location + width.end, yend = results$location - width.end, size = line_size) +
 
-
+    # Causal Bound Estimate
     geom_point(aes(x = Our.lower.estimate, col = color), y= results$location, size = 2.5) +
     geom_point(aes(x = Our.upper.estimate, col = color), y= results$location, size = 2.5)
   
 
   plots = plots +
-
     # Labels titles and legend
     scale_x_continuous(breaks = (0:10)*10,limits = c(min(results$Our.lower), 100)) +
     scale_y_discrete(labels = labs)+
@@ -96,7 +93,7 @@ get_graph = function(results, delta, gamma, xi, title = "Some Title", labs = 1:n
                                                     bquote("Sensitivity CI ("*xi == .(value) * ")"))
                                                    ))),
                         breaks = c("CI", "xi=Inf", "xi=2"),
-                        values=c("black", "red", "blue")
+                        values = c("black", "red", "blue")
                         ) +
 
     theme(axis.text.y = element_text(face = "bold", color="#993333", size=18, angle=45),
@@ -109,10 +106,9 @@ get_graph = function(results, delta, gamma, xi, title = "Some Title", labs = 1:n
           axis.title.x = element_text(size=18))+
     xlab("Efficiency (%)") + ylab("") +
     labs(title = title, caption = bquote("Sensitivity Parameters : " *
-                                           delta * " = " * .(delta) *", " *
-                                           Gamma * " = " * .(gamma) *", " *
-                                           xi  * " = " *  .(xi) ))
-  
+                                           delta * " = " * .(delta) * ", " *
+                                           Gamma * " = " * .(gamma) * ", " *
+                                           xi  * " = " *  .(xi)))
   return(plots)
 }
 
@@ -123,5 +119,3 @@ real_data_graphs = function(data, delta, gamma, xi, alpha, ...)
   bounds = get_bounds_from_data(data, delta, gamma, xi, alpha, ...)
   return(get_graph(bounds, delta, gamma, xi, ...))
 }
-
-
