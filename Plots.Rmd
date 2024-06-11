@@ -1,6 +1,6 @@
 ---
 title: "Plots"
-output: pdf_document:
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -78,6 +78,7 @@ heatmap_same_odds_ratio(0.5, 0.1, 5, xi = Inf, choice = 1, grid = 50, log.transf
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = 2,   choice = 1, grid = 50, log.transform = TRUE)
 ```
 
+\newpage
 
 ## Compare Confidence Interval
 
