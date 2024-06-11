@@ -12,13 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # Real Data Plots
 ## New England Journal Plot
 
-
-```{r, fig.height=7, fig.width=7, warning=FALSE, message = FALSE}
-library(grid)
-library(pBrackets)
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 source('./scripts/datasets.R')
-source('./scripts/real_data_plots.R')
 
 #### Data from New England Journal of Medicine
 #### The last column is indicator of non-vaccinated referent group
@@ -39,12 +35,16 @@ data_vaccine = data.frame(matrix(c(
                           
                             8461, 2200, 1,     
                              456,   29, 0), ncol = 3, byrow = TRUE))
+
 colnames(data_vaccine) = c("All", "Control", "non-vaccinated")
-
-
-#### Plot
 new_england_data = new_england(data_vaccine)
-real_data_graphs(new_england(data_vaccine), 
+```
+
+
+
+```{r, warning=FALSE, message = FALSE}
+source('./scripts/real_data_plots.R')
+real_data_graphs(new_england_data, 
                      delta = 0.1, gamma = 5, xi = c(2, Inf), alpha = 0.95, conf.type = 'normal',
                      title = "Vaccine Efficiency for Different Vaccines", 
                      labs = c("Pfizer", "Morderna", "J&J", "Pfizer or\nMorderna", 
@@ -54,10 +54,8 @@ real_data_graphs(new_england(data_vaccine),
 ## Contour Plot for Pfizer
 
 
-```{r, fig.height=7, fig.width=7, warning=FALSE, message = FALSE}
+```{r, warning=FALSE, message = FALSE}
 source('./scripts/heatmap.R')
-source('./scripts/datasets.R')
-
 causal_bounds_heatmap(c(as.numeric(new_england_data[1,1:4])), 
                       delta.range = c(0.1, 0.5), gamma.range = c(1,10), xi = c(2,Inf), 
                       alpha = 0.95, conf.type = "normal",  ,
@@ -72,7 +70,7 @@ causal_bounds_heatmap(c(as.numeric(new_england_data[1,1:4])),
 
 ## Heatmap for same Odds Ratio
 
-```{r, fig.width=4, fig.height=4, warning=FALSE, message = FALSE}
+```{r, warning=FALSE, message = FALSE}
 source('./scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = Inf, choice = 1, grid = 50, log.transform = TRUE)
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = 2,   choice = 1, grid = 50, log.transform = TRUE)
@@ -82,11 +80,9 @@ heatmap_same_odds_ratio(0.5, 0.1, 5, xi = 2,   choice = 1, grid = 50, log.transf
 
 ## Compare Confidence Interval
 
-```{r, fig.width=10, fig.height=5, warning=FALSE, message = FALSE}
+```{r, warning=FALSE, message = FALSE}
 source('./scripts/CI_compare.R')
 set.seed(123)
 o = c(0.1, 0.2, 0.3, 0.4)
 CI_comparison(o, delta=0.1, gamma=5, xi=2, alpha=0.95, n.population=1000, n.sim=20)
 ```
-
-
