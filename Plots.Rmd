@@ -13,32 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ## New England Journal Plot
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
-
+# Preparing the data
 source('./scripts/datasets.R')
-
-#### Data from New England Journal of Medicine
-#### The last column is indicator of non-vaccinated referent group
-data_vaccine = data.frame(matrix(c(
-                           20406, 3695, 1, 
-                            8500,  163, 0,
-                            6374,   95, 0,
-                          
-                           10761, 2006, 1,    
-                             707,   30, 0,
-                          
-                           4024,   692, 1,      
-                           2359,    38, 0, 
-                          
-                           11812, 2847, 1, 
-                            3589,  105, 0,
-                            2476,   49, 0,
-                          
-                            8461, 2200, 1,     
-                             456,   29, 0), ncol = 3, byrow = TRUE))
-
-colnames(data_vaccine) = c("All", "Control", "non-vaccinated")
+load(file = 'data.rda')
 new_england_data = new_england(data_vaccine)
 ```
+
 
 
 
@@ -56,7 +36,7 @@ real_data_graphs(new_england_data,
 
 ```{r, warning=FALSE, message = FALSE}
 source('./scripts/heatmap.R')
-causal_bounds_heatmap(c(as.numeric(new_england_data[1,1:4])), 
+causal_bounds_heatmap(c(as.numeric(new_england_data[1,])), 
                       delta.range = c(0.1, 0.5), gamma.range = c(1,10), xi = c(2,Inf), 
                       alpha = 0.95, conf.type = "normal",  ,
                       OR = seq(0.1,0.9,0.1), bound.type = 'upper', n.contours = 5, grid = 10)
