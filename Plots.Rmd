@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Preparing the data
 source('./scripts/datasets.R')
 load(file = 'data.rda')
-new_england_data = new_england(data_vaccine)
+data = new_england(data_vaccine)
 ```
 
 
@@ -25,12 +25,14 @@ new_england_data = new_england(data_vaccine)
 ```{r, warning=FALSE, message = FALSE}
 # Figure 2(a)
 source('./scripts/real_data_plots.R')
-real_data_graphs(new_england_data, 
-                     delta = 0.1, gamma = 5, xi = c(2, Inf), alpha = 0.95, conf.type = 'normal',
-                     title = "Vaccine Efficiency for Different Vaccines", 
-                     labs = c("Pfizer", "Morderna", "J&J", "Pfizer or\nMorderna", 
-                                     "Pfizer", "Morderna", "J&J"))
+real_data_graphs(data, 
+                 delta = 0.1, gamma = 5, xi = c(2, Inf), alpha = 0.95, conf.type = 'normal',
+                 title = "Vaccine Efficiency for Different Vaccines", 
+                 labs = c("Pfizer", "Morderna", "J&J", "Pfizer or\nMorderna", 
+                          "Pfizer", "Morderna", "J&J"))
 ```
+
+\newpage
 
 ## Contour Plot for Pfizer
 
@@ -38,7 +40,7 @@ real_data_graphs(new_england_data,
 ```{r, warning=FALSE, message = FALSE}
 # Figure 2(b)
 source('./scripts/heatmap.R')
-causal_bounds_heatmap(c(as.numeric(new_england_data[1,])), 
+causal_bounds_heatmap(c(as.numeric(data[1,])), 
                       delta.range = c(0.1, 0.5), gamma.range = c(1,10), xi = c(2,Inf), 
                       alpha = 0.95, conf.type = "normal",  ,
                       OR = seq(0.1,0.9,0.1), bound.type = 'upper', n.contours = 5, grid = 10)
@@ -66,9 +68,16 @@ CI_comparison(o, delta=0.1, gamma=5, xi=2, alpha=0.95, n.population=1000, n.sim=
 ## Heatmap for same Odds Ratio
 
 ```{r, warning=FALSE, message = FALSE}
-# Figure A2
+# Figure A2(a)
 source('./scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = Inf, choice = 1, grid = 50, log.transform = TRUE)
+```
+
+\newpage
+
+```{r, warning=FALSE, message = FALSE}
+# Figure A2(b)
+source('./scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = 2,   choice = 1, grid = 50, log.transform = TRUE)
 ```
 
