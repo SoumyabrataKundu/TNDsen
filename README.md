@@ -37,8 +37,14 @@ To reproduce the figures in the paper run `Plots.Rmd`.
 To get the causal bounds for a `2x2` contingency table, use the following function:
 
 ```r
-TND_causal_bounds(o, delta, gamma, xi, alpha, conf.type)
+TND_causal_bounds(o, 
+                  delta, 
+                  gamma=Inf, 
+                  xi=Inf, 
+                  alpha=0.95, 
+                  conf.type=c('normal', 'transformed', 'quadratic'))
 ```
+Input to the function : 
 ```
 o         : contingency table (need not be normalized to sum one)
 delta     : value of the sensitivity parameter delta, 
@@ -55,5 +61,18 @@ conf.type : type of confidence set to be used to compute confidence interval,
             if not specified causal bounds are computed without confidence,
             allowed values : 'normal', 'transformed' and 'quadratic.
 ```
+
+Output is a list containing : 
+```
+upper.bound      : upper bound for causal odds ratio.
+lower.bound      : lower bound for causal odds ratio.
+a.upper, b.upper : probabilty distribution of exposure and outcome 
+                   for the two different levels of unmeasure condounding
+                   that achieves the upper bound.
+a.lower, b.lower : probabilty distribution of exposure and outcome 
+                   for the two different levels of unmeasure condounding
+                   that achieves the lower bound.
+```
+
 
 
