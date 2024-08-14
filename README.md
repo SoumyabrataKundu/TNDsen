@@ -1,7 +1,7 @@
 # TNDsen
 
 This repository contains the package associated with the method described in
-''Senstivity Analysis for Test Negative Design'' [].
+''Senstivity Analysis for Test Negative Design''.
 
 ## Software Requirements
 
@@ -85,7 +85,7 @@ print(bounds$upper.bound) # Upper bound for the causal odds ratio
 print(bounds$lower.bound) # Lower bound for the causal odds ratio
 ```
 
-The value of `delta` should be within the range [0,1], and both `Gamma` and `xi` should greater than or equal to 1. By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
+The value of `delta` should be within the range [0,1], and both `gamma` and `xi` should greater than or equal to 1. By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
 
 ```r
 bounds = TND_causal_bounds(o = c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi=2,
