@@ -1,7 +1,7 @@
 # TNDsen
 
 This repository contains the package associated with the method described in
-''Senstivity Analysis for Test Negative Design''.
+''Senstivity Analysis for the Test-Negative Design''.
 
 ## Software Requirements
 
