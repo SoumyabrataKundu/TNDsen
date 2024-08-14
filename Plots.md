@@ -1,28 +1,11 @@
----
-title: "Plots"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
+Plots
+================
 
 # Real Data Plots
+
 ## Vaccine Comparison
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
-# Preparing the data
-source('./scripts/datasets.R')
-load(file = 'data.rda')
-data = new_england(data_vaccine)
-```
-
-
-
-
-```{r, warning=FALSE, message = FALSE}
+``` r
 # Figure 2(a)
 source('./scripts/real_data_plots.R')
 real_data_graphs(data, 
@@ -32,12 +15,11 @@ real_data_graphs(data,
                           "Pfizer", "Morderna", "J&J"))
 ```
 
-\newpage
+![](Plots/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ## Contour Plot for Pfizer
 
-
-```{r, warning=FALSE, message = FALSE}
+``` r
 # Figure 2(b)
 source('./scripts/heatmap.R')
 causal_bounds_heatmap(c(as.numeric(data[1,])), 
@@ -46,15 +28,13 @@ causal_bounds_heatmap(c(as.numeric(data[1,])),
                       OR = seq(0.1,0.9,0.1), bound.type = 'upper', n.contours = 5, grid = 10)
 ```
 
-
-\newpage
+![](Plots/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 # Numerical Simulations
 
-
 ## Compare Confidence Interval
 
-```{r, warning=FALSE, message = FALSE}
+``` r
 # Figure A1
 source('./scripts/CI_compare.R')
 set.seed(123)
@@ -62,22 +42,22 @@ o = c(0.1, 0.2, 0.3, 0.4)
 CI_comparison(o, delta=0.1, gamma=5, xi=2, alpha=0.95, n.population=1000, n.sim=20)
 ```
 
-
-\newpage
+![](Plots/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ## Heatmap for same Odds Ratio
 
-```{r, warning=FALSE, message = FALSE}
+``` r
 # Figure A2(a)
 source('./scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = Inf, choice = 1, grid = 50, log.transform = TRUE)
 ```
 
-\newpage
+![](Plots/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-```{r, warning=FALSE, message = FALSE}
+``` r
 # Figure A2(b)
 source('./scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, 0.1, 5, xi = 2,   choice = 1, grid = 50, log.transform = TRUE)
 ```
 
+![](Plots/figure-gfm/unnamed-chunk-6-1.png)<!-- -->

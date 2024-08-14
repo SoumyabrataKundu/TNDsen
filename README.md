@@ -1,6 +1,7 @@
 # TNDsen
 
-Senstivity Analysis for Test Negative Design
+This repository contains the package associated with the method described in
+''Senstivity Analysis for Test Negative Design'' [].
 
 ## Software Requirements
 
@@ -29,9 +30,9 @@ To install the package `TNDsen` clone the repository and then run the following 
 
 `devtools::install_local("TNDsen", INSTALL_opts="--no-multiarch")`
 
-To reproduce the figures in the paper run `Plots.Rmd`.
+To reproduce the figures in the paper see `Plots.md`.
 
-## Usage
+<!-- ## Usage
 
 
 To get the causal bounds for a `2x2` contingency table, use the following function:
@@ -72,7 +73,23 @@ a.upper, b.upper : probabilty distribution of exposure and outcome
 a.lower, b.lower : probabilty distribution of exposure and outcome 
                    for the two different levels of unmeasure condounding
                    that achieves the lower bound.
+``` -->
+
+## Example
+
+For a contingency table with values \(o_{00} = 0.1\), \(o_{10} = 0.2\), \(o_{01} = 0.3\), and \(o_{11} = 0.4\), the proposed causal bounds can be obtained using the following command, with sensitivity parameters \(\delta = 0.1\), \(\Gamma = 5\), and \(\xi = 2\):
+
+```r
+bounds = TND_causal_bounds(o = c(0.1, 0.2, 0.3, 0.4), delta=0.1, gamma=5, xi=2)
+print(bounds$upper.bound) # Upper bound for the causal odds ratio
+print(bounds$lower.bound) # Lower bound for the causal odds ratio
 ```
 
+The value of `delta` should be within the range \([0,1]\), and both `Gamma` and `xi` should fall within the range \([1, \infty]\). By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
 
+```r
+bounds = TND_causal_bounds(o = c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi=2,
+                           alpha=0.95, conf.type='normal')
+```
 
+In this example, the total population size is \(10,000\). The `alpha` argument determines the confidence level, and the `conf.type` specifies the type of confidence bound to apply, with options being 'normal', 'transformed', or 'quadratic'.
