@@ -77,7 +77,7 @@ a.lower, b.lower : probabilty distribution of exposure and outcome
 
 ## Example
 
-For a contingency table with values \(o_{00} = 0.1\), \(o_{10} = 0.2\), \(o_{01} = 0.3\), and \(o_{11} = 0.4\), the proposed causal bounds can be obtained using the following command, with sensitivity parameters \(\delta = 0.1\), \(\Gamma = 5\), and \(\xi = 2\):
+For a contingency table with values o_00 = 0.1, o_10 = 0.2, o_01 = 0.3 and o_11 = 0.4, the proposed causal bounds can be obtained using the following command:
 
 ```r
 bounds = TND_causal_bounds(o = c(0.1, 0.2, 0.3, 0.4), delta=0.1, gamma=5, xi=2)
@@ -85,11 +85,11 @@ print(bounds$upper.bound) # Upper bound for the causal odds ratio
 print(bounds$lower.bound) # Lower bound for the causal odds ratio
 ```
 
-The value of `delta` should be within the range \([0,1]\), and both `Gamma` and `xi` should fall within the range \([1, \infty]\). By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
+The value of `delta` should be within the range [0,1], and both `Gamma` and `xi` should greater than or equal to 1. By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
 
 ```r
 bounds = TND_causal_bounds(o = c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi=2,
                            alpha=0.95, conf.type='normal')
 ```
 
-In this example, the total population size is \(10,000\). The `alpha` argument determines the confidence level, and the `conf.type` specifies the type of confidence bound to apply, with options being 'normal', 'transformed', or 'quadratic'.
+In this example, the total population size is 10,000. The `alpha` argument determines the confidence level, and the `conf.type` specifies the type of confidence bound to apply, with options being 'normal', 'transformed', or 'quadratic'.

@@ -6,6 +6,11 @@ Plots
 ## Vaccine Comparison
 
 ``` r
+# Preparing the data
+source('./scripts/datasets.R')
+load(file='data.rda')
+data = new_england(data_vaccine)
+
 # Figure 2(a)
 source('./scripts/real_data_plots.R')
 real_data_graphs(data, 
