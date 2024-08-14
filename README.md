@@ -93,3 +93,6 @@ bounds = TND_causal_bounds(o = c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi
 ```
 
 In this example, the total population size is 10,000. The `alpha` argument determines the confidence level, and the `conf.type` specifies the type of confidence bound to apply, with options being 'normal', 'transformed', or 'quadratic'.
+
+## Reference
+Kundu, S., Ding, P., Li, X., & Wang, J. (2024). Sensitivity Analysis for the Test-Negative Design. arXiv preprint arXiv:2406.06980.
