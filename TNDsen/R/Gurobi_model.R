@@ -1,14 +1,15 @@
 #' @import gurobi
 #' @import Matrix
 
-get_gurobi_model = function(o, random)
+get_gurobi_model = function(o, random, Sigma)
 {
   model <- list()
   model$o.hat = c(o)
+  if(!missing(Sigma)) model$Sigma = Sigma
 
-  o = c(o)
-  n = sum(o)
-  o = o/n
+  o = model$o.hat / sum(model$o.hat)
+
+
   # Variable names
   model$varnames <- c('w',
                       `if`(random, c('t00', 't10', 't01', 't11'), NULL),   # t_xy = (o.hat_xy - o_xy)

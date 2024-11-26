@@ -1,0 +1,172 @@
+---
+title: "Continuous Covariate"
+author: "Soumyabrata Kundu"
+date: '2024-11-25'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(TNDsen)
+library(nnet)
+library(ggplot2)
+```
+
+
+```{r}
+# Simulation parameters
+n = 50000
+d = 1
+beta0 = rnorm(4)
+beta = matrix(rnorm(4*d, mean=1), ncol = d)
+
+delta = runif(n,0.1, 0.5)
+gamma = runif(n, 1, 5)
+
+
+```
+
+
+```{r}
+# Data Generation
+
+## Simulate Covariates
+C = matrix(runif(n*d), ncol = d)
+
+## O = softmax(beta @ C + beta_0)
+softmax <- function(x) {
+  # Subtract the maximum value from each element to prevent overflow
+  exp_x <- exp(x - max(x))
+  return( exp_x / sum(exp_x))
+}
+
+o = t(apply(beta %*%t(C) + beta0, 2, softmax))
+
+l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))
+u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)
+a = extraDistr::rdirichlet(n,c(1,1,1,1)) * (u-l) + l
+b = (o - a*(1-delta))/delta
+
+
+## Data Generation Y,Z|C,T = 1 ~ Multinomial(o)
+sample_class <- function(prob_vector) {
+  sample(0:(length(prob_vector)-1), size = 1, prob = prob_vector)
+}
+
+class_labels = apply(o, 1, sample_class)
+data = data.frame(
+  Z = class_labels %% 2,
+  Y = class_labels %/% 2,
+  Label = as.factor(class_labels),
+  C
+)
+data$Label = relevel(data$Label, ref="3")
+
+
+## Sensitivity Parameters
+data$delta = delta
+data$gamma =  pmax(apply(a/b, 1, max), apply(b/a, 1, max))
+data$xi = pmax(apply(a, 1, odds.ratio) / apply(b, 1, odds.ratio), apply(b, 1, odds.ratio) / apply(a, 1, odds.ratio))
+
+data
+barplot(table(data$Label))
+```
+
+
+```{r}
+data
+```
+
+```{r}
+model <- multinom(Label ~ C, data=data)
+o.hat = predict(model, type = "probs") 
+o.hat = o.hat[,c(2,3,4,1)]
+max(o-o.hat)
+```
+
+
+```{r}
+index=1
+k = TND_causal_bounds(o.hat[index, ]*1000, data$delta[index], data$gamma[index], data$xi[index], alpha=0.95, conf.type = 'normal')
+c(k$lower.bound, odds.ratio(a[index, ]), k$upper.bound)
+
+```
+
+
+
+
+
+
+```{r}
+data = TND_causal_bounds_from_data(data, 0.1, 5, 2, alpha=0.95, conf.type='normal')
+data$COR = apply(a,1,odds.ratio)
+#sum(data$lower.bound<=data$COR  & data$COR<=data$upper.bound)
+```
+```{r}
+data
+```
+```{r}
+Sigma_o = (diag(o.hat[index,]) - o.hat[index,] %*% t(o.hat[index,]))   #  4 x 4
+Sigma_delta = kronecker(Sigma_o[1:3,], design_matrix[index,])  # 3d x 4
+Sigma = t(Sigma_delta) %*% Sigma_beta %*% Sigma_delta      #  4 x 4
+diag_Sigma = sqrt(diag(Sigma))
+normalize = diag(1/diag_Sigma)
+Sigma = normalize %*% Sigma %*% normalize
+abs(o[index,]-o.hat[index,]) <= mvtnorm :: qmvnorm(0.95, tail = 'both.tails', sigma = Sigma)$quantile * diag_Sigma 
+
+```
+
+
+```{r}
+k1 = TND_causal_bounds(o.hat[index,], data$delta[index], data$gamma[index], data$xi[index])
+k2 = TND_causal_bounds(o[index,], data$delta[index], data$gamma[index], data$xi[index])
+
+c(data$lower.bound[index], data$COR[index], data$upper.bound[index])
+c(k1$lower.bound, odds.ratio(a[index,]), k1$upper.bound)
+c(k2$lower.bound, odds.ratio(a[index,]), k2$upper.bound)
+
+```
+
+
+```{r}
+data
+```
+
+
+```{r}
+library(ggplot2)
+indices = order(aes(y=apply(b,1,odds.ratio)))
+points = sort(aes(y=apply(b,1,odds.ratio)))
+
+ggplot(data = NULL, aes(x=1:n))+
+  geom_line(aes(y=apply(a,1,odds.ratio)), color='green') + 
+  geom_line(aes(y=data$lower.bound), color='red')+
+  geom_line(aes(y=data$upper.bound), color='blue')
+
+
+```
+
+
+```{r}
+index = 1
+design_matrix = model.matrix(model)
+Sigma_beta = vcov(model)
+Sigma_o = (diag(o.hat[index,]) - o.hat[index,] %*% t(o.hat[index,]))[1:3, 1:3]
+Sigma_delta = kronecker(Sigma_multinomial, design_matrix[index,])
+Sigma = t(delta) %*% Sigma_beta %*% delta
+
+dim(Sigma_delta)
+```
+
+```{r}
+Sigma = matrix(rnorm(9), ncol=3)
+Sigma
+diag_sigma = diag(Sigma)
+```
+
+
+

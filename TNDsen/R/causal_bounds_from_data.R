@@ -3,7 +3,7 @@
 #'
 #' causal_bounds calculates the bounds for a 2X2 contingency table for specified sensitivity parameters.
 #'
-#' @param o.hat 2x2 matrix or an array of length 4.
+#' @param data data matrix
 #' @param w Sensitivity Parameter specifying the proportion of alternative types.
 #' @param gamma Sensitivity Parameter specifying the maximum probability ratio allowed.
 #' @param xi Sensitivity Parameter specifying the allowed ratio of causal odds ratio allowed.
@@ -16,23 +16,8 @@
 #'    \item{lower.bound}{Lower Causal Bound.}
 #'
 #' @export
-TND_causal_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
+TND_causal_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type, ...)
 {
-  # Checking Input
-  ## Check o.hat
-  check_input_for_o(o.hat)
-
-  ## Check w
-  if(delta<0 | delta>1){stop("'delta' must be between 0 and 1")}
-
-  ## Check Gamma
-  gamma = ifelse(missing(gamma), Inf, gamma)
-  if(gamma<1){stop("'gamma' must be greater than or equal to 1")}
-
-  ## Check Xi
-  xi = ifelse(missing(xi), Inf, xi)
-  if(xi<1){stop("'xi' must be greater than or equal to 1")}
-
 
   ## Check alpha
   if(missing(alpha) & !missing(conf.type))
@@ -51,10 +36,11 @@ TND_causal_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
   }
 
 
-  if(xi != Inf)  return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
+
+  if(xi != Inf)  return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
   else if(!missing(conf.type))
   {
-    if(conf.type == 'quadratic')return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
+    if(conf.type == 'quadratic')return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
   }
 
   return(TND_delta_gamma_bound(o.hat, delta, gamma, alpha, conf.type))

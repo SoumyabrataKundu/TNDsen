@@ -23,6 +23,8 @@ This repository contains the package associated with the method described in
 - viridis
 - plyr
 - latex2exp
+- MASS
+- mvtnorm
 
 ## TNDsen Installation
 
