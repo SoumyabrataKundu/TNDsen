@@ -1,7 +1,7 @@
-get_delta_gamma_bounds = function(o.hat, delta, gamma, alpha, conf.type)
+get_delta_gamma_bounds = function(o.hat, delta, gamma, alpha, conf.type, Sigma)
 {
   # Confidence Interval
-  o.conf = get_confidence_interval(o.hat, alpha, conf.type)
+  o.conf = get_confidence_interval(o.hat, alpha, conf.type, Sigma)
   o.hat = o.hat / sum(o.hat)
 
   # Generating l_{xy} and u_{xy} from gamma,w and o_{xy}

@@ -1,9 +1,9 @@
 #' @export
 
-get_confidence_interval = function(model, alpha, conf.type)
+get_confidence_interval = function(o.hat, alpha, conf.type, Sigma)
 {
-  n = sum(model$o.hat)
-  o = model$o.hat/sum(model$o.hat)
+  n = sum(o.hat)
+  o = o.hat/n
 
 
   if(!missing(alpha))
@@ -21,20 +21,19 @@ get_confidence_interval = function(model, alpha, conf.type)
 
     else if(conf.type == 'normal')
     {
-      if('Sigma' %in% names(model))
+      if(missing(Sigma))
       {
-        diag_Sigma = sqrt(diag(model$Sigma))
-        normalize = diag(1/diag_Sigma)
-        Sigma = normalize %*% model$Sigma %*% normalize
-        c = mvtnorm :: qmvnorm(alpha, tail = 'both.tails', sigma = Sigma)$quantile * diag_Sigma
+        se = sqrt(o*(1-o))
+        k = sapply(as.vector(o), function(x){sqrt(x/(1-x))})
+        Sigma = - k %*% t(k); diag(Sigma) = 1
       }
       else
       {
-        diag_Sigma = sqrt(o*(1-o))
-        normalize = sapply(as.vector(o), function(x){sqrt(x/(1-x))})
-        Sigma = - normalize %*% t(normalize); diag(Sigma) = 1
+        se = sqrt(diag(Sigma))
+        Sigma = diag(1/se) %*% Sigma %*% diag(1/se)
       }
-      c = mvtnorm :: qmvnorm(alpha, tail = 'both.tails', sigma = Sigma)$quantile * diag_Sigma / sqrt(n)
+      mvtquantile = mvtnorm :: qmvnorm(alpha, tail = 'both.tails', sigma = Sigma)$quantile
+      c = mvtquantile * se / sqrt(n)
       o.conf.lower = pmax(o - c, 0)
       o.conf.upper = pmin(o + c, 1)
     }

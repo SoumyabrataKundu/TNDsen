@@ -1,7 +1,7 @@
-TND_delta_gamma_bound = function(o.hat, delta, gamma, alpha, conf.type)
+TND_delta_gamma_bound = function(o.hat, delta, gamma, alpha, conf.type, Sigma)
 {
   # Optimization
-  bounds = get_delta_gamma_bounds(o.hat, delta, gamma, alpha, conf.type)
+  bounds = get_delta_gamma_bounds(o.hat, delta, gamma, alpha, conf.type, Sigma)
 
 
 

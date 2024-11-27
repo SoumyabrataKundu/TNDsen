@@ -19,30 +19,29 @@
 TND_causal_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type, ...)
 {
 
-  ## Check alpha
-  if(missing(alpha) & !missing(conf.type))
+  # Check Input
+  ## Check delta
+  if(!('delta' %in% names(data)))
   {
-    warning("Confidence level 'alpha' not specified, considering default value 0.95")
-    alpha = 0.95
+    if(missing(delta)) stop("'delta no provided in neither data nor arguments")
+    else data$delta = delta
   }
 
-  if(!missing(alpha)){if(alpha<0 | alpha>1) stop("'alpha' must be between 0 and 1")}
-
-  ## Checking conf.type
-  if(!missing(alpha) & missing(conf.type))
+  ## Check gamma
+  if(!('gamma' %in% names(data)))
   {
-    warning("'conf.type' not specified, considering default value 'normal'")
-    conf.type = 'normal'
+    if(missing(gamma)) data$gamma = Inf
+    else data$gamma = gamma
+  }
+
+  ## Check xi
+  if(!('xi' %in% names(data)))
+  {
+    if(missing(xi)) data$xi = Inf
+    else data$xi = xi
   }
 
 
-
-  if(xi != Inf)  return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
-  else if(!missing(conf.type))
-  {
-    if(conf.type == 'quadratic')return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
-  }
-
-  return(TND_delta_gamma_bound(o.hat, delta, gamma, alpha, conf.type))
+  return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
 
 }

@@ -6,7 +6,7 @@ fit_multinomial=function(data)
   # Fitting Multinomial regression
   data$Label = as.factor(2*data$Y + data$Z)
   data$Label = relevel(data$Label, ref="3")    # Levels : 3 0 1 2
-  model = multinom(Label ~ C, data=data)
+  model = multinom(Label ~ C, data=data, trace=FALSE)
 
   design_matrix  = model.matrix(model)         # Extract Design Matrix
   Sigma_beta = vcov(model)                     # Extract the variance-covariance matrix

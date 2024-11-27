@@ -33,7 +33,8 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
     else if(conf.type %in% c('transformed', 'normal'))
     {
       # Confidence Interval
-      o.conf = get_confidence_interval(model, alpha, conf.type)
+      if('Sigma' %in% names(model)) o.conf = get_confidence_interval(model$o.hat, alpha, conf.type, model$Sigma)
+      else o.conf = get_confidence_interval(model$o.hat, alpha, conf.type)
       t.interval = list(o - o.conf$o.conf.upper, o - o.conf$o.conf.lower)
 
     }
