@@ -16,7 +16,7 @@
 #'    \item{lower.bound}{Lower Causal Bound.}
 #'
 #' @export
-TND_causal_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type, ...)
+TND_causal_bounds_from_data = function(formula, data, delta, gamma, xi, alpha, conf.type, ...)
 {
 
   # Check Input
@@ -41,7 +41,6 @@ TND_causal_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type,
     else data$xi = xi
   }
 
-
-  return(TND_gurobi_bounds_from_data(data, delta, gamma, xi, alpha, conf.type, ...))
+  return(TND_gurobi_bounds_from_data(formula, data, delta, gamma, xi, alpha, conf.type, ...))
 
 }

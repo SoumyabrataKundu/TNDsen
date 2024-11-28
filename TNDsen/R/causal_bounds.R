@@ -57,6 +57,9 @@ TND_causal_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
     if(conf.type == 'quadratic')return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
   }
 
-  return(TND_delta_gamma_bound(o.hat, delta, gamma, alpha, conf.type))
+  output = TND_delta_gamma_bound(o.hat, delta, gamma, alpha, conf.type, ...)
+  if(output$lower.bound == 0 | output$upper.bound == Inf)
+    return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
+  return(output)
 
 }

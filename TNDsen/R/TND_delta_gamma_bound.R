@@ -4,7 +4,6 @@ TND_delta_gamma_bound = function(o.hat, delta, gamma, alpha, conf.type, Sigma)
   bounds = get_delta_gamma_bounds(o.hat, delta, gamma, alpha, conf.type, Sigma)
 
 
-
   #################################################### I / O ###############################################
 
   # Normalizing o.hat
