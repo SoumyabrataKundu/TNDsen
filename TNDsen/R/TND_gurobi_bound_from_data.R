@@ -10,7 +10,7 @@ TND_gurobi_bounds_from_data = function(formula, data, delta, gamma, xi, alpha, c
   pb <- progress_estimated(n)
 
 
-  for(i in 1:5)
+  for(i in 1:10)
   {
     # Sigma From Multinomial Logistic Regression (Delta Method)
     Sigma_o = (diag(o.hat[i,]) - o.hat[i,] %*% t(o.hat[i,]))   #  4 x 4
