@@ -14,30 +14,28 @@ knitr::opts_chunk$set(echo = TRUE)
 library(TNDsen)
 library(nnet)
 library(ggplot2)
+library(knitrProgressBar)
 ```
+
+
 
 
 ```{r}
 # Simulation parameters
-n = 50000
+n = 10000
 d = 1
 beta0 = rnorm(4)
 beta = matrix(rnorm(4*d, mean=1), ncol = d)
 
 delta = runif(n,0.1, 0.5)
 gamma = runif(n, 1, 5)
+COR_range = c(0.1, 0.5)
 
-
-```
-
-
-```{r}
 # Data Generation
-
 ## Simulate Covariates
 C = matrix(runif(n*d), ncol = d)
 
-## O = softmax(beta @ C + beta_0)
+## o = softmax(beta @ C + beta_0)
 softmax <- function(x) {
   # Subtract the maximum value from each element to prevent overflow
   exp_x <- exp(x - max(x))
@@ -45,12 +43,6 @@ softmax <- function(x) {
 }
 
 o = t(apply(beta %*%t(C) + beta0, 2, softmax))
-
-l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))
-u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)
-a = extraDistr::rdirichlet(n,c(1,1,1,1)) * (u-l) + l
-b = (o - a*(1-delta))/delta
-
 
 ## Data Generation Y,Z|C,T = 1 ~ Multinomial(o)
 sample_class <- function(prob_vector) {
@@ -64,108 +56,89 @@ data = data.frame(
   Label = as.factor(class_labels),
   C
 )
-data$Label = relevel(data$Label, ref="3")
+
 
 
 ## Sensitivity Parameters
-data$delta = delta
-data$gamma =  pmax(apply(a/b, 1, max), apply(b/a, 1, max))
-data$xi = pmax(apply(a, 1, odds.ratio) / apply(b, 1, odds.ratio), apply(b, 1, odds.ratio) / apply(a, 1, odds.ratio))
+l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))          # l_zy
+u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)                      # u_zy
+a = matrix(0, nrow = n, ncol = 4)                                   # p_zy | U = 0
+pb = progress_estimated(n)
+
+
+## Causal Odds ratio :
+## Sample until COR in COR_range and Gamma in gamma_range
+for(i in 1:n)
+{
+  stopping = 0
+  while (TRUE) 
+  {
+    candidate = extraDistr::rdirichlet(1,c(1,1,1,1)) * (u[i,]-l[i,]) + l[i,]
+    stopping = stopping + 1
+    if(COR_range[1] <= odds.ratio(candidate) & odds.ratio(candidate) <= COR_range[2])
+    {
+      a[i,] = c(candidate)
+      break
+    }
+    if(stopping == 10000) stop("This configuration does not work.")
+  }
+  update_progress(pb)
+}
+
+b = (o - a*(1-delta))/delta                                         # p_zy | U = 1
+data$delta = delta                                                  # o = a * (1-delta) + b * delta
+data$gamma =  pmax(apply(a/b, 1, max), apply(b/a, 1, max))          # max(a/b, b/a)
+data$xi = pmax(apply(a, 1, odds.ratio) / apply(b, 1, odds.ratio),   # max(OR(a)/OR(b), OR(b)/OR(a))
+               apply(b, 1, odds.ratio) / apply(a, 1, odds.ratio))
 
 data
 barplot(table(data$Label))
 ```
 
 
-```{r}
-data
-```
 
 ```{r}
-model <- multinom(Label ~ C, data=data)
-o.hat = predict(model, type = "probs") 
-o.hat = o.hat[,c(2,3,4,1)]
-max(o-o.hat)
-```
-
-
-```{r}
-index=1
-k = TND_causal_bounds(o.hat[index, ]*1000, data$delta[index], data$gamma[index], data$xi[index], alpha=0.95, conf.type = 'normal')
-c(k$lower.bound, odds.ratio(a[index, ]), k$upper.bound)
-
+result = TND_causal_bounds_from_data(2*Y + Z ~ C, data,  alpha = 0.90, conf.type='normal')
+result$COR = apply(a,1,odds.ratio)
+head(result)
 ```
 
 
 
 
-
-
 ```{r}
-data = TND_causal_bounds_from_data(data, 0.1, 5, 2, alpha=0.95, conf.type='normal')
-data$COR = apply(a,1,odds.ratio)
-#sum(data$lower.bound<=data$COR  & data$COR<=data$upper.bound)
-```
-```{r}
-data
-```
-```{r}
-Sigma_o = (diag(o.hat[index,]) - o.hat[index,] %*% t(o.hat[index,]))   #  4 x 4
-Sigma_delta = kronecker(Sigma_o[1:3,], design_matrix[index,])  # 3d x 4
-Sigma = t(Sigma_delta) %*% Sigma_beta %*% Sigma_delta      #  4 x 4
-diag_Sigma = sqrt(diag(Sigma))
-normalize = diag(1/diag_Sigma)
-Sigma = normalize %*% Sigma %*% normalize
-abs(o[index,]-o.hat[index,]) <= mvtnorm :: qmvnorm(0.95, tail = 'both.tails', sigma = Sigma)$quantile * diag_Sigma 
+## Confidence Interval for Odds ratio
+model = multinom(2*Y + Z ~ C, data=data, trace=FALSE)
 
+o.hat = predict(model, type = "probs")       # predicted probabilities
+Sigma_beta = vcov(model)                     # variance-covariance matrix
+design_matrix = model.matrix(model)          # design matrix
+
+for (i in 1:n) 
+{
+  Sigma_or = kronecker(c(-1,-1,1), design_matrix[i,]) * odds.ratio(o.hat[i,])  # 1 x 3d
+  variance = diag(t(Sigma_or) %*% Sigma_beta %*% Sigma_or)                     # 1 x 1
+  result$CI.lower[i] = odds.ratio(o.hat[i,]) - 1.645 * sqrt(variance)
+  result$CI.upper[i] = odds.ratio(o.hat[i,]) + 1.645 * sqrt(variance)
+}
 ```
 
 
 ```{r}
-k1 = TND_causal_bounds(o.hat[index,], data$delta[index], data$gamma[index], data$xi[index])
-k2 = TND_causal_bounds(o[index,], data$delta[index], data$gamma[index], data$xi[index])
+subsets = (1:10)
+indices = subsets#[order(result$COR[subsets])]
 
-c(data$lower.bound[index], data$COR[index], data$upper.bound[index])
-c(k1$lower.bound, odds.ratio(a[index,]), k1$upper.bound)
-c(k2$lower.bound, odds.ratio(a[index,]), k2$upper.bound)
-
-```
-
-
-```{r}
-data
-```
-
-
-```{r}
-library(ggplot2)
-indices = order(aes(y=apply(b,1,odds.ratio)))
-points = sort(aes(y=apply(b,1,odds.ratio)))
-
-ggplot(data = NULL, aes(x=1:n))+
-  geom_line(aes(y=apply(a,1,odds.ratio)), color='green') + 
-  geom_line(aes(y=data$lower.bound), color='red')+
-  geom_line(aes(y=data$upper.bound), color='blue')
-
-
-```
-
-
-```{r}
-index = 1
-design_matrix = model.matrix(model)
-Sigma_beta = vcov(model)
-Sigma_o = (diag(o.hat[index,]) - o.hat[index,] %*% t(o.hat[index,]))[1:3, 1:3]
-Sigma_delta = kronecker(Sigma_multinomial, design_matrix[index,])
-Sigma = t(delta) %*% Sigma_beta %*% delta
-
-dim(Sigma_delta)
-```
-
-```{r}
-Sigma = matrix(rnorm(9), ncol=3)
-Sigma
-diag_sigma = diag(Sigma)
+ggplot(data = (1-result[indices,])*100, aes(y=1:length(indices)))+
+  geom_segment(aes(x=lower.bound, xend = upper.bound, yend=1:length(indices)), color='red') + # COR
+  geom_segment(aes(x=CI.lower, xend = CI.upper, y=1:length(indices)+0.2, yend=1:length(indices)+0.2), color='black') +
+  
+  geom_point(aes(x=COR), color='blue') + 
+  geom_point(aes(x=upper.bound), color='red') +
+  geom_point(aes(x=lower.bound), color='red') +
+  geom_point(aes(x=CI.lower, y=1:length(indices)+0.2), color='black') +
+  geom_point(aes(x=CI.upper, y=1:length(indices)+0.2), color='black') +
+  geom_point(aes(x = (1-apply(o.hat[indices, ],1, odds.ratio))*100, , y=1:length(indices)+0.2), color='green')+
+  xlim(c(0,100))
 ```
 
 

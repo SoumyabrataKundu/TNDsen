@@ -1,0 +1,19 @@
+* using log directory 'D:/UCHICAGO/Academic/Projects/Research Projects/Bounds on Test Negative Design/TNDsen/TNDsen.Rcheck'
+* using R version 4.0.2 (2020-06-22)
+* using platform: x86_64-w64-mingw32 (64-bit)
+* using session charset: ISO8859-1
+* using options '--no-manual --as-cran'
+* checking for file 'TNDsen/DESCRIPTION' ... OK
+* checking extension type ... Package
+* this is package 'TNDsen' version '0.1.0'
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Namespace dependencies not required:
+  'Matrix', 'ggplot2', 'gurobi', 'knitrProgressBar', 'metR', 'nnet',
+  'plyr'
+
+See section 'The DESCRIPTION file' in the 'Writing R Extensions'
+manual.
+* DONE
+Status: 1 ERROR
