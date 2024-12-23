@@ -21,124 +21,159 @@ library(knitrProgressBar)
 
 
 ```{r}
-# Simulation parameters
-n = 10000
-d = 1
-beta0 = rnorm(4)
-beta = matrix(rnorm(4*d, mean=1), ncol = d)
-
-delta = runif(n,0.1, 0.5)
-gamma = runif(n, 1, 5)
-COR_range = c(0.1, 0.5)
-
-# Data Generation
-## Simulate Covariates
-C = matrix(runif(n*d), ncol = d)
-
-## o = softmax(beta @ C + beta_0)
 softmax <- function(x) {
-  # Subtract the maximum value from each element to prevent overflow
-  exp_x <- exp(x - max(x))
-  return( exp_x / sum(exp_x))
-}
-
-o = t(apply(beta %*%t(C) + beta0, 2, softmax))
-
-## Data Generation Y,Z|C,T = 1 ~ Multinomial(o)
-sample_class <- function(prob_vector) {
-  sample(0:(length(prob_vector)-1), size = 1, prob = prob_vector)
-}
-
-class_labels = apply(o, 1, sample_class)
-data = data.frame(
-  Z = class_labels %% 2,
-  Y = class_labels %/% 2,
-  Label = as.factor(class_labels),
-  C
-)
-
-
-
-## Sensitivity Parameters
-l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))          # l_zy
-u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)                      # u_zy
-a = matrix(0, nrow = n, ncol = 4)                                   # p_zy | U = 0
-pb = progress_estimated(n)
-
-
-## Causal Odds ratio :
-## Sample until COR in COR_range and Gamma in gamma_range
-for(i in 1:n)
-{
-  stopping = 0
-  while (TRUE) 
-  {
-    candidate = extraDistr::rdirichlet(1,c(1,1,1,1)) * (u[i,]-l[i,]) + l[i,]
-    stopping = stopping + 1
-    if(COR_range[1] <= odds.ratio(candidate) & odds.ratio(candidate) <= COR_range[2])
-    {
-      a[i,] = c(candidate)
-      break
-    }
-    if(stopping == 10000) stop("This configuration does not work.")
+    # Subtract the maximum value from each element to prevent overflow
+    exp_x <- exp(x - max(x))
+    return( exp_x / sum(exp_x))
   }
-  update_progress(pb)
+  
+
+data_generation = function(C)
+{
+  # Data Generation
+  ## Simulate Covariates
+  if(missing(C))
+  {
+    C = matrix(runif(n*d), ncol = d)
+  }
+  
+  ## o = softmax(beta @ C + beta_0)
+  o = t(apply(beta %*%t(C) + beta0, 2, softmax))
+  
+  ## Data Generation Y,Z|C,T = 1 ~ Multinomial(o)
+  sample_class <- function(prob_vector) {
+    sample(0:(length(prob_vector)-1), size = 1, prob = prob_vector)
+  }
+  
+  class_labels = apply(o, 1, sample_class)
+  data = data.frame(
+    Z = class_labels %% 2,
+    Y = class_labels %/% 2,
+    Label = as.factor(class_labels),
+    C,
+    o00 = o[,1], o10 = o[,2],
+    o01 = o[,3], o11 = o[,4]
+  )
+  
+  # Sensitivity Parameters
+  l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))          # l_zy
+  u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)                      # u_zy
+  if(min(apply(l, 1, odds.ratio))<=COR_range[1] | 
+     max(apply(u, 1, odds.ratio))>=COR_range[2]) stop('This configuration does not work.')
+  
+  
+  return(data)
+}
+```
+
+```{r}
+set.seed(123)
+success <- FALSE
+while (!success) {
+  tryCatch({
+    # Simulation parameters
+    n = 50000
+    d = 1
+    beta0 = rnorm(4)
+    beta = matrix(rnorm(4*d, mean=0), 
+                  nrow = 4, ncol = d)
+    delta = 0.1
+    gamma = 5
+    xi = 2
+    COR_range = c(0.05, 0.7)
+    
+    # Fitting Dataset
+    fit_data = data_generation()
+    
+    # Predicting Dataset
+    C_star = matrix(seq(0.1, 1, length.out=10), ncol=1)
+    predict_data = data_generation(C_star)
+    
+    success <- TRUE 
+  }, error = function(e){})
 }
 
-b = (o - a*(1-delta))/delta                                         # p_zy | U = 1
-data$delta = delta                                                  # o = a * (1-delta) + b * delta
-data$gamma =  pmax(apply(a/b, 1, max), apply(b/a, 1, max))          # max(a/b, b/a)
-data$xi = pmax(apply(a, 1, odds.ratio) / apply(b, 1, odds.ratio),   # max(OR(a)/OR(b), OR(b)/OR(a))
-               apply(b, 1, odds.ratio) / apply(a, 1, odds.ratio))
 
-data
-barplot(table(data$Label))
+
+fit_data
+barplot(table(fit_data$Label))
+```
+
+
+```{r}
+# Model Fit
+model = multinom(2*Y + Z ~ C, data=fit_data, trace=FALSE)
+
+o.hat = predict(model, predict_data, type = "probs")      # predicted probabilities
+Sigma_beta = vcov(model)                                  # variance-covariance matrix
+design_matrix = cbind(1, C_star)                          # design matrix
+
+converge = max(abs(o.hat - t(apply(beta %*%t(C_star) + beta0, 2, softmax))))
+print(paste0('|o.hat - o| <= ', round(converge, 3)))
 ```
 
 
 
-```{r}
-result = TND_causal_bounds_from_data(2*Y + Z ~ C, data,  alpha = 0.90, conf.type='normal')
-result$COR = apply(a,1,odds.ratio)
-head(result)
-```
-
-
-
 
 ```{r}
-## Confidence Interval for Odds ratio
-model = multinom(2*Y + Z ~ C, data=data, trace=FALSE)
-
-o.hat = predict(model, type = "probs")       # predicted probabilities
-Sigma_beta = vcov(model)                     # variance-covariance matrix
-design_matrix = model.matrix(model)          # design matrix
-
-for (i in 1:n) 
+result = data.frame()
+pb = progress_estimated(nrow(predict_data))
+for (i in 1:nrow(predict_data)) 
 {
+  # Confidence Interval for Odds Ratio
   Sigma_or = kronecker(c(-1,-1,1), design_matrix[i,]) * odds.ratio(o.hat[i,])  # 1 x 3d
   variance = diag(t(Sigma_or) %*% Sigma_beta %*% Sigma_or)                     # 1 x 1
-  result$CI.lower[i] = odds.ratio(o.hat[i,]) - 1.645 * sqrt(variance)
-  result$CI.upper[i] = odds.ratio(o.hat[i,]) + 1.645 * sqrt(variance)
+  result[i, 'OR.CI.lower'] = odds.ratio(o.hat[i,]) - 1.645 * sqrt(variance)
+  result$OR.CI.upper[i] = odds.ratio(o.hat[i,]) + 1.645 * sqrt(variance)
+  
+  # Bounds for each predicted probability
+  ## Sigma From Multinomial Logistic Regression (Delta Method)
+  Sigma_o = (diag(o.hat[i,]) - o.hat[i,] %*% t(o.hat[i,]))   #  4 x 4
+  Sigma_delta = kronecker(Sigma_o[2:4,], design_matrix[i,])  # 3d x 4
+  Sigma = t(Sigma_delta) %*% Sigma_beta %*% Sigma_delta      #  4 x 4
+  
+  bounds = TND_causal_bounds(o.hat[i, ], delta, gamma, xi, alpha = 0.9, conf.type = 'normal', Sigma = Sigma)
+  result$COR.CI.lower[i] = bounds$lower.bound
+  result$COR.CI.upper[i] = bounds$upper.bound
+  
+  # Bounds for each true probability
+  bounds = TND_causal_bounds(as.numeric(predict_data[i, c('o00', 'o10', 'o01', 'o11')]), delta, gamma, xi)
+  result$COR.lower[i] = bounds$lower.bound
+  result$COR.upper[i] = bounds$upper.bound
+  
+  
+  update_progress(pb)
 }
 ```
 
 
-```{r}
-subsets = (1:10)
-indices = subsets#[order(result$COR[subsets])]
 
-ggplot(data = (1-result[indices,])*100, aes(y=1:length(indices)))+
-  geom_segment(aes(x=lower.bound, xend = upper.bound, yend=1:length(indices)), color='red') + # COR
-  geom_segment(aes(x=CI.lower, xend = CI.upper, y=1:length(indices)+0.2, yend=1:length(indices)+0.2), color='black') +
+
+
+```{r}
+y_values = C_star
+width = 0.02
+
+ggplot(data = (1-result)*100)+
+  # Confidence Interval for Odds Ratio
+  geom_point(aes(x=OR.CI.lower, y=y_values+width, color='Naive CI'))+
+  geom_segment(aes(x=OR.CI.lower, xend = OR.CI.upper, y=y_values+width, yend=y_values+width, color='Naive CI')) +
+  geom_point(aes(x=OR.CI.upper, y=y_values+width, color='Naive CI'))+
+
+  # Bounds for each predicted probability
+  geom_point(aes(x=COR.CI.lower, y=y_values, color='Sensitivity CI'))+
+  geom_segment(aes(x=COR.CI.lower, xend = COR.CI.upper, y=y_values, yend=y_values, color='Sensitivity CI')) + 
+  geom_point(aes(x=COR.CI.upper, y=y_values, color='Sensitivity CI'))+
   
-  geom_point(aes(x=COR), color='blue') + 
-  geom_point(aes(x=upper.bound), color='red') +
-  geom_point(aes(x=lower.bound), color='red') +
-  geom_point(aes(x=CI.lower, y=1:length(indices)+0.2), color='black') +
-  geom_point(aes(x=CI.upper, y=1:length(indices)+0.2), color='black') +
-  geom_point(aes(x = (1-apply(o.hat[indices, ],1, odds.ratio))*100, , y=1:length(indices)+0.2), color='green')+
-  xlim(c(0,100))
+  # Bounds for each true probability
+  geom_point(aes(x=COR.lower, y=y_values-width, color='True Sensitivity Bounds'))+
+  geom_segment(aes(x=COR.lower, xend = COR.upper, y=y_values-width, yend=y_values-width, color='True Sensitivity Bounds')) +
+  geom_point(aes(x=COR.upper, y=y_values-width, color='True Sensitivity Bounds')) +
+  xlab('Vaccine Efficiency 100(1-OR)%') + ylab('Confounder (C)') +
+  labs(title = paste('n=', n), caption = paste0('|o.hat - o| <= ', round(converge, 3))) + 
+  scale_color_manual(values = c('black', 'red', 'blue'))+
+  theme(legend.title = element_blank(),
+        legend.position = c(0.16,0.82))
 ```
 
 
