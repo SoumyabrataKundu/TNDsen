@@ -22,7 +22,7 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
 
       qc = list()
       qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] - 1 + invert, length(invert)), j = rep(var['t00'] - 1 + invert, each = length(invert)), x = c(Sigma.ginv))
-      qc$rhs = qchisq(alpha, 3) / n
+      qc$rhs = qchisq(alpha, 6) / n
       qc$sense = '<'
 
       model$quadcon = append(model$quadcon, list(qc))
