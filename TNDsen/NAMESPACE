@@ -1,11 +1,6 @@
 export(TND_causal_bounds)
-export(TND_causal_bounds_from_data)
 export(odds.ratio)
 
 import(Matrix)
-import(knitrProgressBar)
 import(ggplot2)
 import(gurobi)
-import(nnet)
-#importFrom(plyr,round_any)
-

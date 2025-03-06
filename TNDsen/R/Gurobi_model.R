@@ -1,7 +1,7 @@
 #' @import gurobi
 #' @import Matrix
 
-get_gurobi_model = function(o, random, Sigma)
+get_gurobi_model = function(o, random, Sigma, ...)
 {
   model <- list()
   model$o.hat = c(o)

@@ -1,5 +1,3 @@
-#' @export
-
 get_confidence_interval = function(o.hat, alpha, conf.type, Sigma)
 {
   n = sum(o.hat)

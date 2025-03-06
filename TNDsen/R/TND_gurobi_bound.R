@@ -1,6 +1,6 @@
 #' @import gurobi
 
-TND_gurobi_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type,...)
+TND_gurobi_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
 {
 
   random = !missing(alpha)

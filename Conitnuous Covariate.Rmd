@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(TNDsen)
 library(nnet)
 library(ggplot2)
-library(knitrProgressBar)
 ```
 
 
@@ -22,7 +21,6 @@ library(knitrProgressBar)
 
 ```{r}
 softmax <- function(x) {
-    # Subtract the maximum value from each element to prevent overflow
     exp_x <- exp(x - max(x))
     return( exp_x / sum(exp_x))
   }
@@ -30,190 +28,161 @@ softmax <- function(x) {
 
 data_generation = function(beta, C)
 {
-  ## Simulate Covariates
-  if(missing(C)){C = matrix(runif(n*d), ncol = d)/2+0.5}
+  # Simulate Covariates
+  if(missing(C)){C = matrix(runif(n.population*d), ncol = d)}
   
-  ## o = softmax(beta @ C + beta_0)
+  # o = softmax(beta @ C + beta_0)
   o = t(apply(beta %*%t(cbind(1, C)), 2, softmax))
   
-  ## Data Generation Y,Z|C,T = 1 ~ Multinomial(o)
-  sample_class <- function(prob_vector) {
-    sample(0:(length(prob_vector)-1), size = 1, prob = prob_vector)
-  }
+  # True Probability range
+  if(min(o)<o_range[1] | max(o)>o_range[2]) stop('This configuration does not work.')
   
-  class_labels = apply(o, 1, sample_class)
-  data = data.frame(
-    Z = class_labels %% 2,
-    Y = class_labels %/% 2,
-    C
-  )
-  
-  # Sensitivity Parameters
+  # True Causal Odds Ratio range
   l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))          # l_zy
   u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)                      # u_zy
-  if(min(apply(l, 1, odds.ratio))<=COR_range[1] | 
-     max(apply(u, 1, odds.ratio))>=COR_range[2]) stop('This configuration does not work.')
+  if(min(apply(l, 1, odds.ratio))<=COR_range[1] | max(apply(u, 1, odds.ratio))>=COR_range[2]) 
+    stop('This configuration does not work.')
   
-  
-  return(data)
+  # Y,Z|C,T = 1 ~ Multinomial(o)
+  sample_class <- function(prob_vector) {
+    sample(0:(length(prob_vector)-1), size = 1, prob = prob_vector)}
+  class_labels = apply(o, 1, sample_class)
+  return(data.frame(Z = class_labels %% 2, Y = class_labels %/% 2, C))
 }
 ```
 
+
+
+
 ```{r}
 set.seed(123)
+
 # Simulation parameters
 delta = 0.1
 gamma = 5
 xi = 2
-COR_range = c(0.05, 0.7)
+o_range = c(0.1,0.9)
+COR_range = c(0.1, 0.5)
 
-n = 50000
+# Testing Covariates
 d = 1
+n.test = 5
+C_star = matrix(rep(seq(0, 1, length.out=n.test),d), ncol=d)
 
 # Choosing suitable beta
 success = FALSE
 while (!success) {
   tryCatch({
     # Beta
-    beta = matrix(rnorm(4*(d+1), mean=0), 
-                  nrow = 4, ncol = d+1)
-    # Fit data
-    fit_data = data_generation(beta)
+    beta = rbind(0, matrix(rnorm(3*(d+1), mean=0), nrow = 3, ncol = d+1))
+    
+    # Test data
+    data_generation(beta, C_star)
     success = TRUE 
   }, error = function(e){})
 }
 
-
-
-fit_data
-barplot(table(2*fit_data$Y + fit_data$Z))
+# Testing Covariates
+design_matrix = cbind(1, C_star)                        # design matrix
+o = t(apply(beta %*%t(design_matrix), 2, softmax))      # true probabilities
 ```
+
 
 
 # Simulation
 
-## Data Generation
-
 ```{r}
-# Simulation parameters
-delta = 0.1
-gamma = 5
-xi = 2
-COR_range = c(0.05, 0.7)
-
-n = 500000
-d = 1
-
-get_simulation_data = function(beta)
-{
-    # Training
-    model = multinom(2*Y + Z ~ C, data=data_generation(beta), trace=FALSE) 
-    
-    # Prediction
-    C_star = matrix(seq(0.5, 1, length.out=4), ncol=1)
-    test_data = data_generation(beta, C_star)
-    
-    return(list(
-               o = t(apply(beta %*%t(cbind(1, C_star)), 2, softmax)), # true probabilities
-               o.hat = predict(model, test_data, type = 'probs'),     # predicted probabilities
-               Sigma_beta = vcov(model),                              # variance-covariance matrix
-               design_matrix = cbind(1, C_star)                       # design matrix
-            )
-          )
-}
-```
+n.population = 50000 # Population size for training
+n.sim = 1           # Number of Simulations
+level = 0.95         # Confidence Level
 
 
-
-
-## Bounds
-
-```{r}
-n.sim = 20
-
+not_cover_beta = c()
+not_cover_o = c()
+not_cover_cor = c()
 result = data.frame()
 index = 1
 
+start = proc.time()
+# Confidence Bounds for Causal Odds Ratio
 for(sim in 1:n.sim)
 {
-  print(paste0('Simulation : ', sim, ' / ', n.sim))
-  simulation_data = get_simulation_data(beta)
-  pb = progress_estimated(nrow(simulation_data$design_matrix))
-  for (i in 1:nrow(simulation_data$design_matrix)) 
+  model = multinom(2*Y + Z ~ C, data=data_generation(beta), trace=FALSE)
+  o.hat = predict(model, data_generation(beta, C_star), type = 'probs')     
+  Sigma_beta = vcov(model)                              
+  
+  # Checking Coverage for beta
+  beta_delta = c(t(coef(model) - beta[-1,]))
+  if((t(beta_delta) %*% MASS::ginv(Sigma_beta) %*% beta_delta > qchisq(level, 6)))
+    not_cover_beta = c(not_cover_beta, sim)
+    
+  for (i in 1:n.test) 
   {
-    # Confidence Interval for Odds Ratio
-    Sigma_or = kronecker(c(-1,-1,1), simulation_data$design_matrix[i,]) * odds.ratio(simulation_data$o.hat[i,])  # 1 x 3d
-    variance = diag(t(Sigma_or) %*% simulation_data$Sigma_beta %*% Sigma_or)                                     # 1 x 1
-    result[index, 'OR.CI.lower'] = odds.ratio(simulation_data$o.hat[i,]) - 2.57 * sqrt(variance)
-    result$OR.CI.upper[index] = odds.ratio(simulation_data$o.hat[i,]) + 2.57 * sqrt(variance)
+    print(paste('Simulation', sim, ':', i, '/', n.test))
     
-    # Bounds for each predicted probability
-    ## Sigma From Multinomial Logistic Regression (Delta Method)
-    Sigma_o = (diag(simulation_data$o.hat[i,]) - simulation_data$o.hat[i,] %*% t(simulation_data$o.hat[i,]))   #  4 x 4
-    Sigma_delta = kronecker(Sigma_o[2:4,], simulation_data$design_matrix[i,])                                  # 3d x 4
-    Sigma = t(Sigma_delta) %*% simulation_data$Sigma_beta %*% Sigma_delta                                      #  4 x 4
+    # Confidence Bounds for Odds Ratio
+    Sigma_or = kronecker(c(-1,-1,1), design_matrix[i,]) * odds.ratio(o.hat[i,])  # 1 x 3d
+    variance = diag(t(Sigma_or) %*% Sigma_beta %*% Sigma_or)                                     # 1 x 1
+    result[index, 'OR.CI.lower'] = odds.ratio(o.hat[i,]) - qnorm((1+level)/2) * sqrt(variance)
+    result$OR.CI.upper[index] = odds.ratio(o.hat[i,]) + qnorm((1+level)/2) * sqrt(variance)
+    result$OR[index] = odds.ratio(o[i,])
     
-    bounds = TND_causal_bounds(simulation_data$o.hat[i, ], delta, gamma, xi, alpha = 0.99, conf.type = 'quadratic', Sigma = Sigma)
+    # Confidence Bounds for each Causal Odd Ratio
+    ## Variance Matrix using Delta Method
+    Sigma_o = diag(o.hat[i,]) - o.hat[i,] %*% t(o.hat[i,])   #  4 x 4
+    Sigma_delta = kronecker(Sigma_o[2:4,], design_matrix[i,])                                # 3d x 4
+    Sigma = t(Sigma_delta) %*% Sigma_beta %*% Sigma_delta                                    #  4 x 4
+    
+    ## Sensitivity Bounds
+    bounds = TND_causal_bounds(o.hat[i, ], delta, gamma, xi, alpha = level, conf.type = 'quadratic', Sigma = Sigma, TimeLimit = 600)
     result$COR.CI.lower[index] = bounds$lower.bound
     result$COR.CI.upper[index] = bounds$upper.bound
-    
-    # Bounds for each true probability
-    bounds = TND_causal_bounds(as.numeric(simulation_data$o[i,]), delta, gamma, xi)
+
+    # True Bounds for Causal Odds Ratio
+    bounds = TND_causal_bounds(o[i,], delta, gamma, xi)
     result$COR.lower[index] = bounds$lower.bound
     result$COR.upper[index] = bounds$upper.bound
     
+    ## Checking Coverage for o
+    if(t(o[i,] - o.hat[i,]) %*% MASS::ginv(Sigma) %*% (o[i,] - o.hat[i,]) > qchisq(level, length(coef(model))))
+      not_cover_o = unique(c(not_cover_o, sim))
+
+    # Checking Coverage for bounds
+    if(result$COR.lower[index]< result$COR.CI.lower[index] | result$COR.upper[index]>result$COR.CI.upper[index])
+      not_cover_cor = unique(c(not_cover_cor, sim))
+    
     index = index + 1
-    update_progress(pb)
+    cat('\f')
   }
-  
+
 }
-```
+
+# Run Time
+elapsed = floor((proc.time() - start)['elapsed'])
+print(paste('Run Time:', elapsed %/% 60, 'min', elapsed %% 60, 'sec.'))
+
+# Coverage
+print(paste('Beta not covered at:', paste(not_cover_beta, collapse = " ")))
+print(paste('Coverage of beta:', 1 - length(not_cover_beta) / n.sim))
+print(paste('o not covered at:', paste(not_cover_o, collapse = " ")))
+print(paste('Simultaneous Coverage of o:', 1 - length(not_cover_o) / n.sim))
+print(paste('COR not covered at:', paste(not_cover_cor, collapse = " ")))
+print(paste('Simultaneous Coverage of COR:', 1 - length(not_cover_cor) / n.sim))
+``` 
 
 
-
-
-
-## Plotting
+# Plotting
 
 ```{r}
 plot_data = (1-result)*100
-plot_data$C = simulation_data$design_matrix[,-1]
-width = 0.02
-
-ggplot(data = plot_data[1:nrow(simulation_data$design_matrix),])+
-  # Confidence Interval for Odds Ratio
-  geom_point(aes(x=OR.CI.lower, y=C+width, color='Naive CI'))+
-  geom_segment(aes(x=OR.CI.lower, xend = OR.CI.upper, y=C+width, yend=C+width, color='Naive CI')) +
-  geom_point(aes(x=OR.CI.upper, y=C+width, color='Naive CI'))+
-
-  # Bounds for each predicted probability
-  geom_point(aes(x=COR.CI.lower, y=C, color='Sensitivity CI'))+
-  geom_segment(aes(x=COR.CI.lower, xend = COR.CI.upper, y=C, yend=C, color='Sensitivity CI')) + 
-  geom_point(aes(x=COR.CI.upper, y=C, color='Sensitivity CI'))+
-  
-  # Bounds for each true probability
-  geom_point(aes(x=COR.lower, y=C-width, color='True Sensitivity Bounds'))+
-  geom_segment(aes(x=COR.lower, xend = COR.upper, y=C-width, yend=C-width, color='True Sensitivity Bounds')) +
-  geom_point(aes(x=COR.upper, y=C-width, color='True Sensitivity Bounds')) +
-  xlab('Vaccine Efficiency 100(1-OR)%') + ylab('Confounder (C)') +
-  labs(title = paste('n=', n)) + 
-  scale_color_manual(values = c('black', 'red', 'blue'))+
-  theme(legend.title = element_blank(),
-        legend.position = c(0.16,0.82)) +
-  xlim(c(50, 100))
-```
-
-
-
-
-```{r}
-width = 0.1
-plot_data$sim = rep(1:n.sim, each = nrow(simulation_data$design_matrix))
+plot_data$C = design_matrix[,-1]
+plot_data$sim = rep(1:n.sim, each = n.test)
 for(i in 1:n.sim)
-{
-  plot_data$cover[1:4 + (i-1)*4] = all(plot_data$COR.CI.lower[1:4 + (i-1)*4]>= plot_data$COR.lower[1:4 + (i-1)*4] & plot_data$COR.upper[1:4 + (i-1)*4]>= plot_data$COR.CI.upper[1:4 + (i-1)*4])
-}
+  plot_data$cover[1:n.test + (i-1)*n.test] = all(
+                              plot_data$COR.CI.lower[1:n.test + (i-1)*n.test]>= plot_data$COR.lower[1:n.test + (i-1)*n.test] &
+                              plot_data$COR.upper[1:n.test + (i-1)*n.test]>= plot_data$COR.CI.upper[1:n.test + (i-1)*n.test])
 
+width = 0.1
 ggplot(data = plot_data) +
   # Naive CI
   geom_point(aes(x = OR.CI.lower, y = sim + width, col='Naive CI')) +
@@ -221,20 +190,20 @@ ggplot(data = plot_data) +
   geom_segment(aes(x = OR.CI.lower, y = sim + width, xend = OR.CI.upper, yend = sim + width, col='Naive CI')) +
 
   # Sensitivity Adjusted CI
-  geom_point(aes(x = COR.CI.lower, y = sim - width, col=cover)) +
-  geom_point(aes(x = COR.CI.upper, y = sim - width, col=cover)) +
-  geom_segment(aes(x = COR.CI.lower, y = sim - width, xend = COR.CI.upper, yend = sim - width, col=cover)) +
+  geom_point(aes(x = COR.CI.lower, y = sim - width, col='Senstivity Adjusted CI')) +
+  geom_point(aes(x = COR.CI.upper, y = sim - width, col='Senstivity Adjusted CI')) +
+  geom_segment(aes(x = COR.CI.lower, y = sim - width, xend = COR.CI.upper, yend = sim - width, col='Senstivity Adjusted CI')) +
   
   # True Causal Bounds
   geom_rect(aes(xmin = COR.lower, xmax = COR.upper, ymax = Inf, ymin = -Inf, fill='True Sensitivity Bounds'), col = 'blue', linetype = 'dashed') +
+  #geom_vline(aes(xintercept = OR, col = 'True Odd Ratio'), linetype = 'dashed', size=1) +
   
   # Confounders
   facet_wrap(~ C, scales = "free_x", nrow=1, labeller = labeller(C = function(x) paste("C =", round(as.numeric(x),2)))) +
   
   # Theme
   scale_y_continuous(breaks = 1:n.sim) +
-  scale_color_manual(values = c('red', 'black', 'darkgreen'),
-                     labels = c('Sensitivity CI\n(Not Covered)', 'Naive CI', 'Sensitivity CI\n(Covered)'))+
+  scale_color_manual(values = c('black', 'red', 'darkgreen'))+
   scale_fill_manual(values = c(alpha('blue', 0.01)),
                     guide = guide_legend(
                       order = 3,
@@ -242,18 +211,10 @@ ggplot(data = plot_data) +
                         linetype = 'dashed',
                         color = 'blue'))
                     )+
-  xlab("Vaccine Efficiency 100(1-OR)%") + ylab('Simulation') +
+  xlab("Vaccine Efficiency 100(1-OR)%") + ylab(paste(n.sim, 'Simulations')) +
   theme(legend.title = element_blank(),
         legend.position = "top",      
         legend.direction = "horizontal",
-        axis.text.y = element_blank()) 
-  
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) 
 ```
-
-
-
-
-
-
-
-

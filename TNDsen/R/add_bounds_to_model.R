@@ -14,14 +14,12 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
       names(var) = model$varnames
 
       # Add Confidence Interval Constraint
-      if('Sigma' %in% names(model))
-      {Sigma = model$Sigma; invert = 2:4}
-      else
-      {Sigma = (diag(as.vector(o)) - as.vector(o) %*% t(as.vector(o))); invert = 1:3}
-      Sigma.ginv = MASS :: ginv(Sigma[invert, invert])
+      if('Sigma' %in% names(model)) Sigma = model$Sigma
+      else Sigma = (diag(as.vector(o)) - as.vector(o) %*% t(as.vector(o)))
+      Sigma.ginv = MASS :: ginv(Sigma)
 
       qc = list()
-      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] - 1 + invert, length(invert)), j = rep(var['t00'] - 1 + invert, each = length(invert)), x = c(Sigma.ginv))
+      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(Sigma.ginv))
       qc$rhs = qchisq(alpha, 6) / n
       qc$sense = '<'
 
