@@ -10,10 +10,10 @@ TND_gurobi_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
   params = get_gurobi_params(...)
 
   ## Model
-  model = get_gurobi_model(o.hat, random, ...)
+  model = get_gurobi_model(o.hat, random)
 
   ## Confidence Interval and bounds
-  model = add_bounds_to_model(model, delta, gamma, xi, alpha, conf.type)
+  model = add_bounds_to_model(model, delta, gamma, xi, alpha, conf.type, ...)
 
   # Optimization
   result = get_gurobi_bounds(model, params)

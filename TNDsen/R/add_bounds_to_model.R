@@ -1,4 +1,4 @@
-add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
+add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma, dim, ...)
 {
 
   random = !missing(alpha)
@@ -14,13 +14,14 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
       names(var) = model$varnames
 
       # Add Confidence Interval Constraint
-      if('Sigma' %in% names(model)) Sigma = model$Sigma
-      else Sigma = (diag(as.vector(o)) - as.vector(o) %*% t(as.vector(o)))
-      Sigma.ginv = MASS :: ginv(Sigma)
+      if(missing(Sigma) & !missing(dim)) stop('Sigma is not provided but dim is provided.')
+      if(!missing(Sigma) & missing(dim)) warning("Sigma is provided but not dim. Assuming dim = 3.")
+      if(missing(Sigma))  Sigma = (diag(as.vector(o)) - as.vector(o) %*% t(as.vector(o)))
+      if(missing(dim)) dim = 3
 
       qc = list()
-      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(Sigma.ginv))
-      qc$rhs = qchisq(alpha, 6) / n
+      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(MASS :: ginv(Sigma)))
+      qc$rhs = qchisq(alpha, dim) / n
       qc$sense = '<'
 
       model$quadcon = append(model$quadcon, list(qc))
@@ -32,8 +33,7 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
     else if(conf.type %in% c('transformed', 'normal'))
     {
       # Confidence Interval
-      if('Sigma' %in% names(model)) o.conf = get_confidence_interval(model$o.hat, alpha, conf.type, model$Sigma)
-      else o.conf = get_confidence_interval(model$o.hat, alpha, conf.type)
+      o.conf = get_confidence_interval(model$o.hat, alpha, conf.type, Sigma)
       t.interval = list(o - o.conf$o.conf.upper, o - o.conf$o.conf.lower)
 
     }

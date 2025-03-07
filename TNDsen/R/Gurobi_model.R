@@ -5,7 +5,7 @@ get_gurobi_model = function(o, random, Sigma, ...)
 {
   model <- list()
   model$o.hat = c(o)
-  if(!missing(Sigma)) model$Sigma = Sigma
+
 
   o = model$o.hat / sum(model$o.hat)
 
