@@ -1,4 +1,3 @@
-#' @import gurobi
 #' @import Matrix
 
 get_gurobi_model = function(o, random, Sigma, ...)

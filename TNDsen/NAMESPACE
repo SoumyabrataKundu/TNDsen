@@ -2,5 +2,5 @@ export(TND_causal_bounds)
 export(odds.ratio)
 
 import(Matrix)
-import(ggplot2)
 import(gurobi)
+importFrom(MASS, ginv)

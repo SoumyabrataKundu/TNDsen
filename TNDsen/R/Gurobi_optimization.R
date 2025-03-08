@@ -25,24 +25,3 @@ get_gurobi_bounds = function(model, params)
               lower.bound = lower, lower.vars = lower.vars))
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

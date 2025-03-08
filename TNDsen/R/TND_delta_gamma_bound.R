@@ -12,6 +12,7 @@ TND_delta_gamma_bound = function(o.hat, delta, gamma)
   o.hat = o.hat / sum(o.hat)
 
   a.lower = bounds$lower$a
+  dimnames(a.lower) = list(rownames(o.hat), colnames(o.hat))
   b.lower = (o.hat - a.lower * (1-delta)) / delta
 
   # The tight upper bound for this l_{xy} and u_{xy}
@@ -19,10 +20,12 @@ TND_delta_gamma_bound = function(o.hat, delta, gamma)
   b.upper = (o.hat - a.upper * (1-delta)) / delta
 
   return(list(upper.bound = 1/bounds$upper$value,
-              a.upper = a.upper,
-              b.upper = b.upper,
+              o.upper = o.hat,
+              p_zy.0.upper = a.upper,
+              p_zy.1.upper = b.upper,
 
               lower.bound = bounds$lower$value,
-              a.lower = a.lower,
-              b.lower = b.lower))
+              o.lower = o.hat,
+              p_zy.0.lower = a.lower,
+              p_zy.1.lower = b.lower))
 }

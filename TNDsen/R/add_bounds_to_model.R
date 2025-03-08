@@ -1,3 +1,5 @@
+#' @importFrom Mass ginv
+
 add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma, dim, ...)
 {
 
@@ -20,7 +22,7 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma,
       if(missing(dim)) dim = 3
 
       qc = list()
-      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(MASS :: ginv(Sigma)))
+      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(ginv(Sigma)))
       qc$rhs = qchisq(alpha, dim) / n
       qc$sense = '<'
 
