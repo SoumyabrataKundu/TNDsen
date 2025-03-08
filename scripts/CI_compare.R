@@ -86,6 +86,7 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     geom_point(data = subset(data, CI == "quadratic"), aes(y = time, col = "quadratic")) +
     geom_point(data = subset(data, CI == "transformed"), aes(y = time, col = "transformed")) +
     coord_trans(y='log10') +
+    scale_y_continuous(breaks = c(1,5,10)) +
     xlab("Simulation") + ylab("Time (minutes)")+
     theme(legend.position = "none")
 
