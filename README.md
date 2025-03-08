@@ -82,7 +82,7 @@ a.lower, b.lower : probabilty distribution of exposure and outcome
 For a contingency table with values o_00 = 0.1, o_10 = 0.2, o_01 = 0.3 and o_11 = 0.4, the proposed causal bounds can be obtained using the following command:
 
 ```r
-bounds = TND_causal_bounds(o = c(0.1, 0.2, 0.3, 0.4), delta=0.1, gamma=5, xi=2)
+bounds = TND_causal_bounds(o=c(0.1, 0.2, 0.3, 0.4), delta=0.1, gamma=5, xi=2)
 print(bounds$upper.bound) # Upper bound for the causal odds ratio
 print(bounds$lower.bound) # Lower bound for the causal odds ratio
 ```
@@ -90,7 +90,7 @@ print(bounds$lower.bound) # Lower bound for the causal odds ratio
 The value of `delta` should be within the range [0,1], and both `gamma` and `xi` should greater than or equal to 1 (Inf is the default value). By default, this does not generate confidence bounds. To obtain confidence bounds, include the following additional arguments:
 
 ```r
-bounds = TND_causal_bounds(o = c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi=2,
+bounds = TND_causal_bounds(o=c(1000, 2000, 3000, 4000), delta=0.1, gamma=5, xi=2,
                            alpha=0.95, conf.type='normal')
 ```
 
