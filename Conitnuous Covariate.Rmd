@@ -52,8 +52,8 @@ while(TRUE)
     # True Causal Odds Ratio range
     l = pmax(o/(delta*gamma + (1-delta)), (o-delta)/(1-delta))          # l_zy
     u = pmin(o*gamma/(delta + (1-delta)*gamma), 1)                      # u_zy
-    if(min(apply(l, 1, odds.ratio))<=COR_range[1] | 
-       max(apply(u, 1, odds.ratio))>=COR_range[2]) next
+    if(min(apply(l, 1, odds.ratio), apply(u, 1, odds.ratio))<=COR_range[1] | 
+       max(apply(l, 1, odds.ratio), apply(u, 1, odds.ratio))>=COR_range[2]) next
       
     break
 }
