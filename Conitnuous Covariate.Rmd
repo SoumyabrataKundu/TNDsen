@@ -20,7 +20,7 @@ library(ggplot2)
 # Parameter Selection
 
 ```{r}
-set.seed(12345)
+set.seed(123456)
 
 # Simulation parameters
 delta = 0.1
@@ -139,21 +139,28 @@ for(sim in 1:n.sim)
     Sigma_delta = kronecker(Sigma_o[2:4,], design_matrix[i,]) # 3d x 4
     Sigma = t(Sigma_delta) %*% Sigma_beta %*% Sigma_delta     #  4 x 4
     
+    ## Checking Coverage for o
+    if(t(o[i,] - o.hat[i,]) %*% MASS::ginv(Sigma) %*% (o[i,] - o.hat[i,]) > qchisq(level, length(coef(model))))
+      not_cover_o = unique(c(not_cover_o, sim))
+    
     ## Sensitivity Bounds
     for(conf in conf.type){
       bounds = TND_causal_bounds(o.hat[i, ], delta, gamma, xi, alpha = level, conf.type = conf, 
-                                 Sigma = Sigma, dim=length(coef(model)), TimeLimit = 180)
+                                 Sigma = Sigma, dim=length(coef(model)), TimeLimit = 300)
       result[index, paste0('COR.CI.lower.', conf)] = bounds$lower.bound
       result[index, paste0('COR.CI.upper.', conf)] = bounds$upper.bound
       
       # Checking Coverage for bounds
       if(result$COR.lower[index] < bounds$lower.bound | result$COR.upper[index] > bounds$upper.bound)
+      {
         not_cover_cor = unique(c(not_cover_cor, sim))
+        if(t(o[i,] - o.hat[i,]) %*% MASS::ginv(Sigma) %*% (o[i,] - o.hat[i,]) <= qchisq(level, length(coef(model))))
+          stop('Optimaization error.')
+      }
+        
     }
     
-    ## Checking Coverage for o
-    if(t(o[i,] - o.hat[i,]) %*% MASS::ginv(Sigma) %*% (o[i,] - o.hat[i,]) > qchisq(level, length(coef(model))))
-      not_cover_o = unique(c(not_cover_o, sim))
+    
     
     index = index + 1
     cat('\f')
@@ -174,9 +181,6 @@ print(paste('Simultaneous Coverage of COR:', 1 - length(not_cover_cor) / n.sim))
 ``` 
 
 
-```{r}
-plot_data[1:10,]
-```
 
 
 

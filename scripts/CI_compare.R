@@ -6,10 +6,9 @@ library(extraDistr)
 library(latex2exp)
 
 
-coverage = function(o, delta = 0.1, gamma = 5, xi = 2, alpha = 0.95, n.population = 1000, n.sim = 10)
+coverage = function(o, delta, gamma, xi, alpha = 0.95, n.population = 1000, n.sim = 20)
 {
-  CI_type = c('transformed', 'normal', 'quadratic'
-  )
+  CI_type = c('transformed', 'normal', 'quadratic')
   data = data.frame()
   pb = progress_estimated(n.sim)
   o=o/sum(o)
@@ -25,7 +24,7 @@ coverage = function(o, delta = 0.1, gamma = 5, xi = 2, alpha = 0.95, n.populatio
         t0 = proc.time()
         k = TND_causal_bounds(o.hat, delta, gamma, xi, alpha = alpha, conf.type = CI_type[j])
 
-        data[3*i+j-3, 'time'] = (proc.time() - t0)['elapsed']
+        data[3*i+j-3, 'time'] = (proc.time() - t0)['elapsed'] / 60
         data[3*i+j-3, 'CI'] = CI_type[j]
         data[3*i+j-3, 'lower'] = k$lower.bound
         data[3*i+j-3, 'upper'] = k$upper.bound
@@ -46,7 +45,7 @@ coverage = function(o, delta = 0.1, gamma = 5, xi = 2, alpha = 0.95, n.populatio
 }
 
 
-plot_CI_compare = function(data, o = c(0.1,0.2,0.3,0.4), delta = 0.1, gamma = 5, xi = 2, alpha = 0.95)
+plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
 {
   k = TND_causal_bounds(c(o), delta, gamma, xi)
   n.sim = nrow(data) %/% length(unique(data$CI))
@@ -87,7 +86,7 @@ plot_CI_compare = function(data, o = c(0.1,0.2,0.3,0.4), delta = 0.1, gamma = 5,
     geom_point(data = subset(data, CI == "quadratic"), aes(y = time, col = "quadratic")) +
     geom_point(data = subset(data, CI == "transformed"), aes(y = time, col = "transformed")) +
     coord_trans(y='log10') +
-    xlab("Simulation") + ylab("Time (seconds)")+
+    xlab("Simulation") + ylab("Time (minutes)")+
     theme(legend.position = "none")
 
 
