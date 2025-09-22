@@ -82,10 +82,11 @@ heatmap_same_odds_ratio = function(estimated.or, delta, gamma, xi, grid.size = 2
     geom_tile() +
     scale_fill_viridis(name = "", option = "F") +
     theme_classic()+
-    theme(axis.title = element_text(size = 13)) +
+    theme(axis.text =  element_text(size=15),
+          legend.text = element_text(size=15),
+          axis.title =  element_text(size=18, face = "bold")) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_continuous(expand = c(0, 0)) +
-    ggtitle(`if`(log.transform, "Log(Upper Bound/Lower Bound)", "Upper Bound - Lower Bound"))+
     xlab("Proportion of Positive Cases")+ ylab("Proportion of Treated Cases")
 
   return(p)

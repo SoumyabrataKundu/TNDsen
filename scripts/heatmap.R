@@ -106,7 +106,8 @@ plot_heatmap = function(data.heatmap, o, contours, bound.type = 'upper', n.conto
                               legend.position = "right",
                               plot.subtitle = element_text(size=15),
                               legend.title = element_blank(),
-                              legend.text = element_text(size=12)) +
+                              legend.text = element_text(size=12),
+                              axis.text = element_text(size=12)) +
       scale_x_continuous(expand=c(0,0)) +
       scale_y_continuous(expand=c(0,0)) +
       labs(subtitle = bquote(delta ~ '=' ~ .(round(delta.value, 2))))

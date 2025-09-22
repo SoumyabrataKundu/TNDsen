@@ -67,7 +67,9 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     coord_trans(x='log10') +
     geom_hline(yintercept=0) + xlab("Bounds") + ylab("Density") +
     scale_color_discrete(name="CI Type", labels = c(TeX("$C_\\alpha^N$"), TeX("$C_\\alpha^Q$"), TeX("$C_\\alpha^T$"))) +
-    theme(legend.position = c(0.85, 0.8)) +
+    theme(legend.position = c(0.85, 0.8),
+          axis.text =  element_text(size=12),
+          axis.title =  element_text(size=15, face = "bold")) +
     geom_vline(xintercept = k$lower.bound, linetype="dashed") +
     geom_vline(xintercept = k$upper.bound, linetype="dashed") +
     annotate("text", x = k$lower.bound-0.05, y = 5, label = "True Lower bound", angle = "90")+
@@ -78,7 +80,9 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     geom_boxplot(aes(x = CI, y = log(upper) - log(lower)), fill = 'lightblue') +
     scale_x_discrete(labels = c(TeX("$C_\\alpha^N$"), TeX("$C_\\alpha^Q$"), TeX("$C_\\alpha^T$")))+
     ylab("Log(Upper / Lower)")+
-    theme(axis.title.x = element_blank())
+    theme(axis.title.x = element_blank(),
+          axis.text =  element_text(size=12),
+          axis.title.y =  element_text(size=15, face = "bold"))
 
   # Time
   p3 = ggplot(data = data, aes(x=1:n.sim)) +
@@ -88,7 +92,9 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     coord_trans(y='log10') +
     scale_y_continuous(breaks = c(1,5,10)) +
     xlab("Simulation") + ylab("Time (minutes)")+
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          axis.text =  element_text(size=12),
+          axis.title =  element_text(size=15, face = "bold"))
 
 
 
