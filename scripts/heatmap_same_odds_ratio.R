@@ -5,8 +5,6 @@ library(TNDsen)
 library(knitrProgressBar)
 
 
-
-
 same_odds_ratio_grid = function(estimated.or, delta, gamma, xi, grid.size)
 {
 
