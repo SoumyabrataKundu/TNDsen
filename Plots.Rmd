@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+
+
 # Real Data Plots
 
 ## Vaccine Comparison
@@ -19,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 source('scripts/bounds_compare.R')
 source('scripts/real_data_plots.R')
 
-load('data_vaccine.rda')
+load('data.rda')
 vacccine_efficiency_comparison(data_vaccine, delta = 0.1, gamma = 3, xi = 2, alpha = 0.95, conf.type = 'normal')
 ```
 
@@ -31,7 +33,7 @@ vacccine_efficiency_comparison(data_vaccine, delta = 0.1, gamma = 3, xi = 2, alp
 source('scripts/heatmap.R')
 source('scripts/real_data_plots.R')
 
-load('data_confounders.rda')
+load('data.rda')
 heatmap_confounders(data_confounders, grid = 10, alpha = 0.95, conf.type = 'normal')
 ```
 
