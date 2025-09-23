@@ -53,7 +53,7 @@ heatmap_same_odds_ratio(0.5, delta = 0.1, gamma = 5, xi=2, grid=50, log.transfor
 ```
 ![](Figures/FigureA2(b).png)
 
-## Continuous Confounder
+## Continuous Confounder Simulation
 ``` r
 # Figure A3
 source('scripts/continuous.R')
