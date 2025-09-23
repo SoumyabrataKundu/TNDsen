@@ -19,6 +19,7 @@
 TND_causal_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
 {
   # Checking Input
+
   ## Check o.hat
   check_input_for_o(o.hat)
 
@@ -45,13 +46,16 @@ TND_causal_bounds = function(o.hat, delta, gamma, xi, alpha, conf.type, ...)
 
   ## Checking conf.type
   if(!missing(alpha) & missing(conf.type))
+  {warning("'conf.type' not specified, considering default value 'normal'")}
+  conf.type = ifelse(missing(conf.type), 'normal', conf.type)
+
+  if(xi == Inf & conf.type!= 'quadratic')
   {
-    warning("'conf.type' not specified, considering default value 'normal'")
-    conf.type = 'normal'
+    return(TND_delta_gamma_bound(o.hat, delta, gamma, alpha, conf.type))
   }
-
-
-  if(xi != Inf | !missing(conf.type))  return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
-  return(TND_delta_gamma_bound(o.hat, delta, gamma))
+  else
+  {
+    return(TND_gurobi_bounds(o.hat, delta, gamma, xi, alpha, conf.type, ...))
+  }
 
 }

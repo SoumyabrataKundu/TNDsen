@@ -1,6 +1,4 @@
-#' @importFrom Mass ginv
-
-add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma, dim, ...)
+add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type)
 {
 
   random = !missing(alpha)
@@ -16,14 +14,13 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma,
       names(var) = model$varnames
 
       # Add Confidence Interval Constraint
-      if(missing(Sigma) & !missing(dim)) stop('Sigma is not provided but dim is provided.')
-      if(!missing(Sigma) & missing(dim)) warning("Sigma is provided but not dim. Assuming dim = 3.")
-      if(missing(Sigma))  Sigma = (diag(as.vector(o)) - as.vector(o) %*% t(as.vector(o)))
-      if(missing(dim)) dim = 3
+      Sigma = (diag(o) - o %*% t(o))[1:3, 1:3]
+      Sigma.ginv = MASS :: ginv(Sigma)
+
 
       qc = list()
-      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00'] + 0:3, 4), j = rep(var['t00'] + 0:3, each = 4), x = c(ginv(Sigma)))
-      qc$rhs = qchisq(alpha, dim) / n
+      qc$Qc = spMatrix(n.var, n.var, i = rep(var['t00']:(var['t00']+ 2), 3), j = rep(var['t00']:(var['t00']+ 2), each = 3), x = c(Sigma.ginv))
+      qc$rhs = qchisq(alpha, 3) / n
       qc$sense = '<'
 
       model$quadcon = append(model$quadcon, list(qc))
@@ -35,7 +32,7 @@ add_bounds_to_model = function(model, delta, gamma, xi, alpha, conf.type, Sigma,
     else if(conf.type %in% c('transformed', 'normal'))
     {
       # Confidence Interval
-      o.conf = get_confidence_interval(model$o.hat, alpha, conf.type, Sigma)
+      o.conf = get_confidence_interval(model$o.hat, alpha, conf.type)
       t.interval = list(o - o.conf$o.conf.upper, o - o.conf$o.conf.lower)
 
     }

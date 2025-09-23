@@ -1,7 +1,5 @@
 ---
 title: "Testing"
-author: "Soumyabrata Kundu"
-date: '2024-06-11'
 output: pdf_document
 ---
 
