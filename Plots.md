@@ -29,7 +29,7 @@ heatmap_confounders(data_confounders, grid = 10, alpha = 0.95, conf.type = 'norm
 
 ``` r
 # Figure A1
-source('./scripts/CI_compare.R')
+source('scripts/CI_compare.R')
 
 set.seed(123)
 o = c(0.1, 0.2, 0.3, 0.4)
@@ -41,7 +41,7 @@ CI_comparison(o, delta=0.1, gamma=5, xi=2, alpha=0.95, n.population=1000, n.sim=
 ## Heatmap for same Odds Ratio
 ``` r
 # Figure A2(a)
-source('./scripts/heatmap_same_odds_ratio.R')
+source('scripts/heatmap_same_odds_ratio.R')
 heatmap_same_odds_ratio(0.5, delta = 0.1, gamma = 5, xi=Inf, grid=50, log.transform=TRUE)
 ```
 
