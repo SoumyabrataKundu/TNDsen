@@ -7,10 +7,10 @@ get_gurobi_bounds = function(model, params)
  # Minimization
   model$modelsense = 'min'
   result <- gurobi(model, params)
-
   lower <- result$objval
   lower.vars = result$x
   names(lower.vars) = model$varnames
+
 
   # Maximization
   model$modelsense = 'max'
@@ -25,24 +25,3 @@ get_gurobi_bounds = function(model, params)
               lower.bound = lower, lower.vars = lower.vars))
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

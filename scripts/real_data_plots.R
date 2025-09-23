@@ -1,121 +1,80 @@
-library(TNDsen)
 library(ggplot2)
-library(knitrProgressBar)
+library(cowplot)
+library(patchwork)
 
 
-# Getting the Bounds
-get_bounds_from_data = function(data, delta, gamma, xi, alpha, conf.type='transformed', ...)
+vacccine_efficiency_comparison = function(data, delta, gamma, xi, alpha, conf.type)
 {
-  
-  results = expand.grid(delta = delta, gamma = gamma, xi = xi, index=1:nrow(data))
-  factor = (nrow(results) %/% nrow(data))
-  if(missing(alpha)){alpha = 0.95}
-  pb = progress_estimated(nrow(results))
-  
-  for(i in 1:nrow(results))
-  {
-     o = as.numeric(data[results$index[i], c("o00", "o10", "o01", "o11")])
-    
-    
-    # Estimates
-    results$Our.estimate[i] = (1 - odds.ratio(o)) * 100
-    
-    # Bounds
-    ## Our Bounds Without CI
-    k = TND_causal_bounds(o, results$delta[i], results$gamma[i], results$xi[i])
-    results$Our.lower.estimate[i] = (1-k$upper.bound)*100
-    results$Our.upper.estimate[i] = (1-k$lower.bound)*100
-    
-    ## Our Bounds With CI
-    k = TND_causal_bounds(o, delta = results$delta[i], gamma = results$gamma[i], xi = results$xi[i], alpha = alpha, conf.type = conf.type)
-    results$Our.lower[i] = (1-k$upper.bound)*100
-    results$Our.upper[i] = (1-k$lower.bound)*100
-    
-    ## Confidence Intervals
-    n = sum(o)
-    factor = exp(qnorm((1+alpha)/2) * sqrt(sum(n/o)) / sqrt(n))
-    results$CI.lower[i] = (1 - odds.ratio(o) * factor) * 100
-    results$CI.upper[i] = (1 - odds.ratio(o) / factor) * 100
-  
-    
-    update_progress(pb) 
-  }
-  return(results)
+  bounds = get_bounds_from_data(data, delta = delta, gamma = gamma, xi = xi, alpha = alpha, conf.type = conf.type)
+  plot.hospital = get_graph(bounds[bounds$type=='hospital',], delta = 0.1, gamma = 3, xi = 2)
+  plot.emergency = get_graph(bounds[bounds$type=='emergency',], delta = 0.1, gamma = 3, xi = 2)
+
+
+    leg <- get_legend(
+      plot.hospital +
+        theme(legend.position = "top",
+              legend.key.width = unit(25, "pt"),
+              legend.direction = "horizontal",
+              legend.box = "horizontal")
+    )
+
+  label_row <- ggdraw() +
+    draw_label("Hospitalization",       x = 0.275, y = 0.5, size = 18) +
+    draw_label("Emergency Department",  x = 0.79, y = 0.5, size = 18)
+
+  plots <- plot_grid(
+    plot.hospital  + theme(legend.position = "none"),
+    plot.emergency + theme(legend.position = "none"),
+    ncol = 2, align = "hv"
+  )
+
+  g <- plot_grid(leg, label_row, plots, ncol = 1,
+                 rel_heights = c(0.12, 0.08, 1))
+
+  ggdraw(g) +
+    annotate(geom = "text", x = 0.55, y = -0.05, label = "Vaccine Efficiency 100(1-OR)%", size=6.5) +
+    theme(plot.margin = margin(15, 1, 35, 15))
 }
 
-
-
-
-# Plotting Function
-get_graph = function(results, delta, gamma, xi, title = "Some Title", labs = 1:nrow(results), width.end = 0.05, line_size = 1, ...)
+heatmap_confounders = function(data, grid = 10, alpha, conf.type)
 {
-  n = nrow(results)
-  results$index = rev(results$index)
-  labs = rev(labs)
-  offsets = list(Our = c(-0.15,0), CI = 0.15)
-  results$location = results$index + rep(offsets[["Our"]], length(unique(results$index)))
-  color = paste0("xi=", results$xi)
-  
-  offset = offsets[["CI"]]
-  
-  plots = ggplot(data = results, aes(y=as.factor(index))) +
-    geom_blank() +
-    
-    # Naive CI
-    geom_segment(aes(x = CI.lower, xend = CI.upper, col = "CI"), 
-                 y = results$index + offset, yend = results$index + offset, size = line_size) +
-    geom_segment(aes(x = CI.lower, xend = CI.lower, col = "CI"), 
-                 y = results$index + offset + width.end, yend = results$index + offset - width.end, size = line_size) +
-    geom_segment(aes(x = CI.upper, xend = CI.upper, col = "CI"), 
-                 y = results$index + offset + width.end, yend = results$index + offset - width.end, size = line_size) +
-    
-    geom_point(aes(x = Our.estimate, col = "CI"), y= results$index+offset, size = 2.5) +
-    
-    # Sensitivity Adjusted CI
-    geom_segment(aes(x = Our.lower, xend = Our.upper, col = color),
-                 y = results$location, yend = results$location, size = line_size) +
-    geom_segment(aes(x = Our.lower, xend = Our.lower, col = color),
-                 y = results$location + width.end, yend = results$location - width.end, size = line_size) +
-    geom_segment(aes(x = Our.upper, xend = Our.upper, col = color),
-                 y = results$location + width.end, yend = results$location - width.end, size = line_size) +
+  data.hospital = as.matrix(data[data$type=='hospital', c('o00', 'o10', 'o01', 'o11')])
+  rownames(data.hospital) = data$confounder[data$type=='hospital']
+  sen_params.hospital = estimate_sen_params(data.hospital)
 
-    # Causal Bound Estimate
-    geom_point(aes(x = Our.lower.estimate, col = color), y= results$location, size = 2.5) +
-    geom_point(aes(x = Our.upper.estimate, col = color), y= results$location, size = 2.5)
-  
+  contours = list(
+    c(88.75, 89, 89.25, 89.50, 89.7, 90),
+    c(85, 85.5, 86.5, 87.6, 88.6, 89.5, 90)
+  )
 
-  plots = plots +
-    # Labels titles and legend
-    scale_x_continuous(breaks = (0:10)*10,limits = c(min(results$Our.lower), 100)) +
-    scale_y_discrete(labels = labs)+
-    scale_colour_manual(labels = c("Naive CI", rev(sapply(unique(xi),  function(value)`if`(value == Inf,
-                                                    bquote("Sensitivity CI ("*xi == infinity * ")"),
-                                                    bquote("Sensitivity CI ("*xi == .(value) * ")"))
-                                                   ))),
-                        breaks = c("CI", "xi=Inf", "xi=2"),
-                        values = c("black", "red", "blue")
-                        ) +
-
-    theme(axis.text.y = element_text(face = "bold", color="#993333", size=18, angle=45),
-          axis.text.x = element_text(face = "bold", color="#993333", size = 15),
-          legend.title = element_blank(),
-          legend.text = element_text(size=15),
-          legend.position = c(0.25,.85),
-          plot.title = element_blank(),
-          plot.caption = element_blank(),
-          axis.title.x = element_text(size=18))+
-    xlab("Efficiency (%)") + ylab("") +
-    labs(title = title, caption = bquote("Sensitivity Parameters : " *
-                                           delta * " = " * .(delta) * ", " *
-                                           Gamma * " = " * .(gamma) * ", " *
-                                           xi  * " = " *  .(xi)))
-  return(plots)
-}
+  plot.list.hospital = causal_bounds_heatmap(o = data.hospital['all',], delta = c(0.1, 0.3), gamma.range = c(1,2.5), xi.range = c(1,2.5), alpha = alpha, conf.type = conf.type,
+                                             grid = grid, contours = contours, bound.type = "upper", highlight = sen_params.hospital)
 
 
+  data.emergency = as.matrix(data[data$type=='emergency', c('o00', 'o10', 'o01', 'o11')])
+  rownames(data.emergency) = data$confounder[data$type=='emergency']
+  sen_params.emergency = estimate_sen_params(data.emergency)
 
-real_data_graphs = function(data, delta, gamma, xi, alpha, ...)
-{
-  bounds = get_bounds_from_data(data, delta, gamma, xi, alpha, ...)
-  return(get_graph(bounds, delta, gamma, xi, ...))
+  contours = list(
+    c(87, 87.5, 88, 88.5, 89),
+    c(82, 84, 85, 86, 88)
+  )
+
+
+  plot.list.emergency = causal_bounds_heatmap(o = data.emergency['all',], delta = c(0.1, 0.3), gamma.range = c(1,3.5), xi.range = c(1,3.5), alpha = alpha, conf.type = conf.type,
+                                              grid = grid, contours = contours, bound.type = "upper", highlight = sen_params.emergency)
+
+
+  labels = c("A : age >= 85", "B : >=1 choronic respiratory diseases", "C : >= 1 choronic nonrespiratory diseases", "D : black",  "E : hispanic" )
+  labels_letter = c("A", "B", "C", "D", "E")
+  labels_confounder = c(" : age >= 85", " : >=1 chronic respiratory diseases", " : >= 1 chronic nonrespiratory diseases", " : black", " : hispanic")
+  ggdraw(wrap_plots(c(plot.list.hospital, plot.list.emergency), ncol=2, byrow = FALSE)) +
+    annotate(geom = "text", x = 0.45, y = 0, label = bquote(" Confounding Strength (" * Gamma * ")"), size=6.5) +
+    annotate(geom = "text", x = 0, y = 0.5, label = bquote("Effect Heterogeneity (" * xi * ")"), angle = 90, size=6.5) +
+    annotate(geom = "text", x = c(0.225, 0.425), y = rep(-0.075, 2), label = labels_letter[1:2], size=6.5, col='red') +
+    annotate(geom = "text", x = c(0.3, 0.6), y = rep(-0.075, 2), label = labels_confounder[1:2], size=6.5, col='black') +
+    annotate(geom = "text", x = c(0.1, 0.56, 0.745), y = rep(-0.14, 3), label = labels_letter[3:5], size=6.5, col='red') +
+    annotate(geom = "text", x = c(0.3, 0.6, 0.8), y = rep(-0.14, 3), label = labels_confounder[3:5], size=6.5, col='black') +
+    annotate(geom = "text", x = c(0.225, 0.725), y = rep(1.01, 2), label = c("Hospitalization", "Emergency Deptartment"), size=6.5, col='black') +
+    theme(plot.margin = margin(20, 1, 80, 15))
 }
