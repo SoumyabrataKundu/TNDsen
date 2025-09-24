@@ -6,8 +6,8 @@ library(latex2exp)
 vacccine_efficiency_comparison = function(data, delta, gamma, xi, alpha, conf.type)
 {
   bounds = get_bounds_from_data(data, delta = delta, gamma = gamma, xi = xi, alpha = alpha, conf.type = conf.type)
-  plot.hospital = get_graph(bounds[bounds$type=='hospital',], delta = 0.1, gamma = 3, xi = 2)
-  plot.emergency = get_graph(bounds[bounds$type=='emergency',], delta = 0.1, gamma = 3, xi = 2)
+  plot.hospital = get_graph(bounds[bounds$type=='hospital',], delta = delta, gamma = gamma, xi = xi)
+  plot.emergency = get_graph(bounds[bounds$type=='emergency',], delta = delta, gamma = gamma, xi = xi)
 
 
     leg <- get_legend(
