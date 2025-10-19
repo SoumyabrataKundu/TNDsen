@@ -1,25 +1,25 @@
 # Real Data Plots
 
-## Vaccine Comparison
-
-``` r
-# Figure 2
-source('scripts/bounds_compare.R')
-
-load('data.rda')
-vacccine_efficiency_comparison(data_vaccine, delta = 0.1, gamma = 3, xi = 2, alpha = 0.95, conf.type = 'quadratic')
-```
-![](Figures/Figure2.png)
-
 ## Heatmap and Contour plot
 
 ``` r
-# Figure 3
+# Figure 2
 source('scripts/heatmap.R')
 source('scripts/real_data_plots.R')
 
 load('data.rda')
 heatmap_confounders(data_confounders, grid = 10, alpha = 0.95, conf.type = 'normal')
+```
+![](Figures/Figure2.png)
+
+## Vaccine Comparison
+
+``` r
+# Figure 3
+source('scripts/bounds_compare.R')
+
+load('data.rda')
+vacccine_efficiency_comparison(data_vaccine, delta = 0.1, gamma = 3, xi = 2, alpha = 0.95, conf.type = 'quadratic')
 ```
 ![](Figures/Figure3.png)
 

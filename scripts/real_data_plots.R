@@ -92,7 +92,7 @@ heatmap_confounders = function(data, type='hospital', delta, gamma.range, xi.ran
       list(
         age = 
           list(list(c(79.50, 80.00, 80.50, 81.00, 81.50)),
-               list(c(89.75, 90.00, 90.20, 90.50, 90.75))),
+               list(c(89.75, 90.00, 90.15, 90.50, 90.75))),
         respiratory = 
           list(list(c(90.05, 90.25, 90.50, 90.75, 91.00)),
                list(c(83.50, 83.90, 84.25, 84.55, 85.00))),
@@ -103,7 +103,7 @@ heatmap_confounders = function(data, type='hospital', delta, gamma.range, xi.ran
           list(list(c(80.00, 80.50, 81.05, 81.50, 82.00)),
                list(c(89.00, 89.25, 89.50, 89.75, 90.00))),
         hispanic = 
-          list(list(c(88.50, 88.85, 89.20, 89.55, 89.90)),
+          list(list(c(88.50, 88.85, 89.15, 89.55, 89.90)),
                list(c(88.25, 88.50, 88.75, 89.00, 89.40)))
       ),
     'emergency' = 
@@ -112,16 +112,16 @@ heatmap_confounders = function(data, type='hospital', delta, gamma.range, xi.ran
           list(list(c(65.00, 66.00, 67.50, 69.00, 70.00)),
                list(c(87.00, 87.50, 88.00, 88.50, 89.25))),
         respiratory = 
-          list(list(c(81.50, 82.00, 82.75, 83.50, 84.50)),
+          list(list(c(81.50, 82.20, 82.75, 83.50, 84.50)),
                list(c(87.00, 87.50, 88.00, 88.50, 89.00))),
         nonrespiratory = 
           list(list(c(82.50, 83.25, 84.00, 84.75, 85.50)),
                list(c(88.00, 88.50, 89.00, 89.50, 90.00))),
         black = 
-          list(list(c(74.50, 75.50, 76.50, 77.50, 78.50)),
+          list(list(c(74.25, 75.50, 76.50, 77.50, 78.50)),
                list(c(87.00, 87.50, 88.00, 88.50, 89.00))),
         hispanic = 
-          list(list(c(51.50, 53.50, 55.50, 57.50, 59.50)),
+          list(list(c(51.00, 53.25, 55.50, 57.50, 59.50)),
                list(c(87.75, 88.25, 88.75, 89.25, 89.75)))
       )  
   )
