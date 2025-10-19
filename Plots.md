@@ -66,3 +66,29 @@ plot_continuous_confounder_simultaion(delta = 0.1, gamma = 5, xi = 2, n.test = 5
     ## B_01       1.3  -1.3
     ## B_11      -0.1  -0.3
 ![](Figures/FigureA3.png)
+
+# Confounder-wise Heatmap
+
+## Hospitalization 
+
+``` r
+# Figure A4
+source('scripts/heatmap.R')
+source('scripts/real_data_plots.R')
+
+load('data.rda')
+heatmap_confounders(data_confounders, type='hospital', delta=0.1, gamma.range=c(1, 2.5), xi.range=c(1, 2.5), grid=10, alpha=0.95, conf.type='normal')
+```
+![](Figures/FigureA4.png)
+
+## Emergency Department
+
+``` r
+# Figure A5
+source('scripts/heatmap.R')
+source('scripts/real_data_plots.R')
+
+load('data.rda')
+heatmap_confounders(data_confounders, type='emergency', delta=0.1, gamma.range=c(1, 3.5), xi.range=c(1, 3.5), grid=10, alpha=0.95, conf.type='normal')
+```
+![](Figures/FigureA5.png)

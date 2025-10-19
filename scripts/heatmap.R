@@ -82,7 +82,7 @@ plot_heatmap = function(data.heatmap, o, contours, bound.type = 'upper', n.conto
 
 
 
-    plot.list[[paste0("xi = ", delta.value)]] =
+    plot.list[[paste0("delta = ", delta.value)]] =
       ggplot(subplot.data, aes(y = xi.seq.heatmap, x = gamma.seq.heatmap)) +
 
       # Heat map
@@ -117,8 +117,8 @@ plot_heatmap = function(data.heatmap, o, contours, bound.type = 'upper', n.conto
     {
       l1 = (max(data.heatmap$gamma) - min(data.heatmap$gamma)) / 25
       l2 = (max(data.heatmap$xi) - min(data.heatmap$xi)) / 25
-      plot.list[[paste0("xi = ", delta.value)]] =
-        plot.list[[paste0("xi = ", delta.value)]] +
+      plot.list[[paste0("delta = ", delta.value)]] =
+        plot.list[[paste0("delta = ", delta.value)]] +
         geom_point(aes(x = gamma, y = xi), color = "red", size = 2, shape = 8, data = highlight) +
         geom_text(aes(x = gamma + l1, y = xi-l2, label=c("A", "B", "C", "D", "E")), color = "red", size = 5, data = highlight)
 
