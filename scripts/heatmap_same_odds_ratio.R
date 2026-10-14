@@ -74,9 +74,6 @@ get_table = function(estimated.or, alpha, beta)
 heatmap_same_odds_ratio = function(estimated.or, delta, gamma, xi, grid.size = 20, log.transform = FALSE)
 {
   data = same_odds_ratio_grid(estimated.or, delta, gamma, xi, grid.size)
-  xlabels = list(expression("o"["11"]+"o"["01"]), expression("o"["00"]), expression("o"["00"]))
-  ylabels = list(expression("o"["11"] + "o"["10"]), expression("o"["11"]), expression("o"["10"]))
-
 
   p = ggplot(data = data, aes(x = x, y = y, fill = `if`(log.transform, log(upper) - log(lower), upper-lower))) +
     geom_tile() +
@@ -87,7 +84,7 @@ heatmap_same_odds_ratio = function(estimated.or, delta, gamma, xi, grid.size = 2
           axis.title =  element_text(size=18, face = "bold")) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_x_continuous(expand = c(0, 0)) +
-    xlab("Proportion of Positive Cases")+ ylab("Proportion of Treated Cases")
+    xlab("Proportion of Treated Cases")+ ylab("Proportion of Positive Cases")
 
   return(p)
 }

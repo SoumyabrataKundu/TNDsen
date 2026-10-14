@@ -20,7 +20,7 @@ vacccine_efficiency_comparison = function(data, delta, gamma, xi, alpha, conf.ty
 
   label_row <- ggdraw() +
     draw_label("Hospitalization",       x = 0.275, y = 0.5, size = 18) +
-    draw_label("Emergency Department",  x = 0.79, y = 0.5, size = 18)
+    draw_label("Emergency department/Urgent care",  x = 0.79, y = 0.5, size = 18)
 
   plots <- plot_grid(
     plot.hospital  + theme(legend.position = "none"),
@@ -73,7 +73,7 @@ heatmap = function(data, grid = 10, alpha, conf.type)
     annotate(geom = "text", x = c(0.3, 0.6), y = rep(-0.075, 2), label = labels_confounder[1:2], size=6.5, col='black') +
     annotate(geom = "text", x = c(0.105, 0.556, 0.743), y = rep(-0.14, 3), label = labels_letter[3:5], size=6.5, col='red') +
     annotate(geom = "text", x = c(0.3, 0.6, 0.8), y = rep(-0.14, 3), label = labels_confounder[3:5], size=6.5, col='black') +
-    annotate(geom = "text", x = c(0.225, 0.725), y = rep(1.01, 2), label = c("Hospitalization", "Emergency Deptartment"), size=6.5, col='black') +
+    annotate(geom = "text", x = c(0.225, 0.725), y = rep(1.01, 2), label = c("Hospitalization", "Emergency department/Urgent care"), size=6.5, col='black') +
     theme(plot.margin = margin(20, 1, 80, 15))
 }
 
@@ -135,7 +135,7 @@ heatmap_confounders = function(data, type='hospital', delta, gamma.range, xi.ran
   
   titles = list(
     'hospital' = 'Hospitalization',
-    'emergency' = 'Emergency Department'
+    'emergency' = 'Emergency department/Urgent care'
   )
   
   plot.list = list()

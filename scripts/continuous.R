@@ -97,8 +97,10 @@ continuous_confounder_simultaion = function(delta = 0.1, gamma = 5, xi = 2, n.te
       Sigma_or = kronecker(c(-1,-1,1), design_matrix[i,]) * odds.ratio(o.hat[i,])  # 1 x 3d
       variance = diag(t(Sigma_or) %*% Sigma_beta %*% Sigma_or)
       result[index, 'OR'] = odds.ratio(o[i,])
-      result$OR.CI.lower[index] = odds.ratio(o.hat[i,]) - qnorm((1+alpha)/2) * sqrt(variance)
-      result$OR.CI.upper[index] = odds.ratio(o.hat[i,]) + qnorm((1+alpha)/2) * sqrt(variance)
+      # result$OR.CI.lower[index] = odds.ratio(o.hat[i,]) - qnorm((1+alpha)/2) * sqrt(variance)
+      # result$OR.CI.upper[index] = odds.ratio(o.hat[i,]) + qnorm((1+alpha)/2) * sqrt(variance)
+      result$OR.CI.lower[index] = odds.ratio(o.hat[i,]) - sqrt(qchisq(alpha, df = length(coef(model)))) * sqrt(variance)
+      result$OR.CI.upper[index] = odds.ratio(o.hat[i,]) + sqrt(qchisq(alpha, df = length(coef(model)))) * sqrt(variance)
 
       # True Bounds for Causal Odds Ratio
       bounds = TND_causal_bounds(o[i,], delta, gamma, xi)
@@ -145,10 +147,10 @@ plot_continuous_confounder_simultaion = function(delta = 0.1, gamma = 5, xi = 2,
     geom_segment(aes(x = OR.CI.lower, y = sim + width, xend = OR.CI.upper, yend = sim + width, col='Naive CI'), linewidth = linewidth) +
 
     # Sensitivity Adjusted CI
-    geom_point(aes(x = .data[[paste0('COR.CI.lower.', conf.type)]], y = sim, col='Senstivity Adjusted CI'), size = point_size) +
-    geom_point(aes(x = .data[[paste0('COR.CI.upper.', conf.type)]], y = sim, col='Senstivity Adjusted CI'), size = point_size) +
+    geom_point(aes(x = .data[[paste0('COR.CI.lower.', conf.type)]], y = sim, col='Sensitivity Adjusted CI'), size = point_size) +
+    geom_point(aes(x = .data[[paste0('COR.CI.upper.', conf.type)]], y = sim, col='Sensitivity Adjusted CI'), size = point_size) +
     geom_segment(aes(x = .data[[paste0('COR.CI.lower.', conf.type)]], y = sim, xend = .data[[paste0('COR.CI.upper.', conf.type)]],
-                     yend = sim, col='Senstivity Adjusted CI'), linewidth = linewidth) +
+                     yend = sim, col='Sensitivity Adjusted CI'), linewidth = linewidth) +
 
     # True Causal Bounds
     geom_rect(aes(xmin = COR.lower, xmax = COR.upper, ymax = Inf, ymin = -Inf, fill='True Sensitivity Bounds'), col = 'blue', linetype = 'dashed') +

@@ -24,7 +24,7 @@ coverage = function(o, delta, gamma, xi, alpha = 0.95, n.population = 1000, n.si
         t0 = proc.time()
         k = TND_causal_bounds(o.hat, delta, gamma, xi, alpha = alpha, conf.type = CI_type[j])
 
-        data[3*i+j-3, 'time'] = (proc.time() - t0)['elapsed'] / 60
+        data[3*i+j-3, 'time'] = (proc.time() - t0)['elapsed'] # / 60
         data[3*i+j-3, 'CI'] = CI_type[j]
         data[3*i+j-3, 'lower'] = k$lower.bound
         data[3*i+j-3, 'upper'] = k$upper.bound
@@ -66,7 +66,7 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     scale_y_continuous(expand = c(0, 0)) +
     coord_trans(x='log10') +
     geom_hline(yintercept=0) + xlab("Bounds") + ylab("Density") +
-    scale_color_discrete(name="CI Type", labels = c(TeX("$C_\\alpha^N$"), TeX("$C_\\alpha^Q$"), TeX("$C_\\alpha^T$"))) +
+    scale_color_discrete(name="CI Type", labels = c(TeX("$S_{c,\\alpha}^N$"), TeX("$S_{c,\\alpha}^Q$"), TeX("$S_{c,\\alpha}^T$"))) +
     theme(legend.position = c(0.85, 0.8),
           axis.text =  element_text(size=12),
           axis.title =  element_text(size=15, face = "bold")) +
@@ -78,7 +78,7 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
   # Log Difference
   p2 = ggplot(data=data) +
     geom_boxplot(aes(x = CI, y = log(upper) - log(lower)), fill = 'lightblue') +
-    scale_x_discrete(labels = c(TeX("$C_\\alpha^N$"), TeX("$C_\\alpha^Q$"), TeX("$C_\\alpha^T$")))+
+    scale_x_discrete(labels = c(TeX("$S_{c,\\alpha}^N$"), TeX("$S_{c,\\alpha}^Q$"), TeX("$S_{c,\\alpha}^T$")))+
     ylab("Log(Upper / Lower)")+
     theme(axis.title.x = element_blank(),
           axis.text =  element_text(size=12),
@@ -91,7 +91,7 @@ plot_CI_compare = function(data, o, delta, gamma, xi, alpha)
     geom_point(data = subset(data, CI == "transformed"), aes(y = time, col = "transformed")) +
     coord_trans(y='log10') +
     scale_y_continuous(breaks = c(1,5,10)) +
-    xlab("Simulation") + ylab("Time (minutes)")+
+    xlab("Simulation") + ylab("Time (seconds)")+
     theme(legend.position = "none",
           axis.text =  element_text(size=12),
           axis.title =  element_text(size=15, face = "bold"))
